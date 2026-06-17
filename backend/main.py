@@ -173,7 +173,7 @@ def battle_start(data: BattleStart, db: Session = Depends(get_db)):
     return {
         "status": "started",
         "opponent_name": opponent_name,
-        **session.get_state(),
+        **session.state(),
     }
 
 
