@@ -79,8 +79,10 @@ class CoachFeedbackCreate(BaseModel):
 
 
 class BattleAction(BaseModel):
-    zone: str
-    timing: float
+    action: str  # strike, advance, retreat, push_out, wait
+    zone: Optional[str] = None
+    kiai: bool = False
+    kamae_change: Optional[str] = None
 
 
 class BattleStart(BaseModel):

@@ -11,7 +11,7 @@ from schemas import (
     CoachFeedbackOut, CoachFeedbackCreate,
     BattleStart, BattleAction,
 )
-from battle import BattleSession, generate_ai_stats
+from battle import BattleSession
 from seed import seed
 
 app = FastAPI(title="정진 — Kendo Training API")
@@ -164,7 +164,7 @@ def battle_start(data: BattleStart, db: Session = Depends(get_db)):
             opponent_stats.setdefault(z, 50.0)
         opponent_name = opp.name
     else:
-        opponent_stats = generate_ai_stats(player_stats)
+        opponent_stats = {zone: score * 0.85 for zone, score in player_stats.items()}
         opponent_name = "AI 상대"
 
     session = BattleSession(player_stats, opponent_stats, opponent_name)
@@ -173,8 +173,7 @@ def battle_start(data: BattleStart, db: Session = Depends(get_db)):
     return {
         "status": "started",
         "opponent_name": opponent_name,
-        "player_stats": player_stats,
-        "opponent_stats": opponent_stats,
+        **session.get_state(),
     }
 
 
@@ -183,7 +182,12 @@ def battle_action(student_id: int, action: BattleAction):
     session = active_battles.get(student_id)
     if not session:
         raise HTTPException(404, "No active battle")
-    return session.player_attack(action.zone, action.timing)
+    return session.process(
+        action=action.action,
+        zone=action.zone,
+        kiai=action.kiai,
+        kamae=action.kamae_change,
+    )
 
 
 @app.post("/api/battle/timeout/{student_id}")
