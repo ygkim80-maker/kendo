@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import * as PIXI from "pixi.js";
 import { api } from "../hooks/api";
 
 const C = {
@@ -48,327 +47,227 @@ function playSound(type) {
 }
 
 /* ══════════════════════════════════════════════
-   PixiJS Kendo Fighter Sprite (Programmatic)
+   Canvas 2D Kendo Fighter Drawing
    ══════════════════════════════════════════════ */
-function drawFighterFrame(g, { pose = "ready", attackZone = null, hit = false, flip = false, semeShake = 0 }) {
-  g.clear();
-  const s = flip ? -1 : 1;
-  const ox = flip ? 120 : 0;
+function drawFighter(ctx, x, y, { pose = "ready", attackZone = null, hit = false, flip = false, semeShake = 0, scale = 1 }) {
+  ctx.save();
+  ctx.translate(x + semeShake, y);
+  ctx.scale(scale, scale);
+  if (flip) { ctx.scale(-1, 1); ctx.translate(-120, 0); }
 
-  const tx = (x) => flip ? (120 - x) : x;
-  const line = (x1, y1, x2, y2, color, w) => {
-    g.lineStyle(w, color, 1); g.moveTo(tx(x1), y1); g.lineTo(tx(x2), y2);
-  };
-  const rect = (x, y, w, h, color, r = 0) => {
-    g.lineStyle(0); g.beginFill(color);
-    if (r) g.drawRoundedRect(tx(x) - (flip ? w : 0), y, w, h, r);
-    else g.drawRect(tx(x) - (flip ? w : 0), y, w, h);
-    g.endFill();
-  };
-  const ellipse = (x, y, rx, ry, color) => {
-    g.lineStyle(0); g.beginFill(color); g.drawEllipse(tx(x), y, rx, ry); g.endFill();
-  };
-
-  // Body shift for attack/hit poses
   let bx = 0, by = 0;
-  if (pose === "attack") { bx = s * 15; by = -5; }
-  if (pose === "hit") { bx = s * -10; by = 3; }
+  if (pose === "attack") { bx = 15; by = -5; }
+  if (pose === "hit") { bx = -10; by = 3; }
+  ctx.translate(bx, by);
 
-  g.position.x = bx + semeShake;
-  g.position.y = by;
+  if (hit) { ctx.globalAlpha = 0.7; }
 
-  // Hit flash
-  if (hit) { g.tint = 0xFFFF88; } else { g.tint = 0xFFFFFF; }
+  // Feet shadows
+  ctx.fillStyle = "#0a0a1a";
+  ctx.beginPath(); ctx.ellipse(42, 275, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(62, 278, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
 
-  // ── Feet shadows ──
-  ellipse(42, 275, 12, 4, 0x0a0a1a);
-  ellipse(62, 278, 12, 4, 0x0a0a1a);
-
-  // ── Hakama (wide pleated skirt) ──
-  g.lineStyle(0);
-  g.beginFill(0x0d1b3a);
-  g.moveTo(tx(25), 148); g.lineTo(tx(18), 272); g.quadraticCurveTo(tx(42), 282, tx(52), 278);
-  g.quadraticCurveTo(tx(62), 282, tx(85), 272); g.lineTo(tx(78), 148); g.closePath();
-  g.endFill();
+  // Hakama (wide pleated skirt)
+  ctx.fillStyle = "#0d1b3a";
+  ctx.beginPath();
+  ctx.moveTo(25, 148); ctx.lineTo(18, 272); ctx.quadraticCurveTo(42, 282, 52, 278);
+  ctx.quadraticCurveTo(62, 282, 85, 272); ctx.lineTo(78, 148); ctx.closePath();
+  ctx.fill();
   // Pleat lines
-  g.lineStyle(1, 0x081428, 0.3);
-  for (let px of [33, 42, 52, 62, 71]) {
-    g.moveTo(tx(px), 150); g.lineTo(tx(px + (px < 52 ? -2 : 2)), 275);
+  ctx.strokeStyle = "rgba(8,20,40,0.3)"; ctx.lineWidth = 1;
+  for (const px of [33, 42, 52, 62, 71]) {
+    ctx.beginPath(); ctx.moveTo(px, 150); ctx.lineTo(px + (px < 52 ? -2 : 2), 275); ctx.stroke();
   }
 
-  // ── Tare (waist protector) ──
+  // Tare (waist protector)
   for (let i = 0; i < 5; i++) {
     const tw = i === 2 ? 13 : 10;
-    rect(26 + i * 10, 145, tw, 22, 0x1a1535, 2);
-    g.lineStyle(0.5, 0x2a2050, 0.5);
-    g.drawRoundedRect(tx(26 + i * 10) - (flip ? tw : 0), 145, tw, 22, 2);
+    ctx.fillStyle = "#1a1535";
+    ctx.beginPath();
+    ctx.roundRect(26 + i * 10, 145, tw, 22, 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(42,32,80,0.5)"; ctx.lineWidth = 0.5;
+    ctx.stroke();
   }
 
-  // ── Keikogi (jacket) ──
-  g.beginFill(0x0d1b3a); g.lineStyle(0);
-  g.moveTo(tx(30), 80); g.lineTo(tx(26), 148); g.lineTo(tx(78), 148); g.lineTo(tx(74), 80);
-  g.closePath(); g.endFill();
+  // Keikogi (jacket)
+  ctx.fillStyle = "#0d1b3a";
+  ctx.beginPath();
+  ctx.moveTo(30, 80); ctx.lineTo(26, 148); ctx.lineTo(78, 148); ctx.lineTo(74, 80);
+  ctx.closePath(); ctx.fill();
   // Left sleeve
-  g.beginFill(0x0d1b3a);
-  g.moveTo(tx(30), 84); g.lineTo(tx(12), 102); g.lineTo(tx(16), 115); g.lineTo(tx(32), 105);
-  g.closePath(); g.endFill();
+  ctx.beginPath();
+  ctx.moveTo(30, 84); ctx.lineTo(12, 102); ctx.lineTo(16, 115); ctx.lineTo(32, 105);
+  ctx.closePath(); ctx.fill();
   // Right sleeve
-  g.beginFill(0x0d1b3a);
-  g.moveTo(tx(74), 84); g.lineTo(tx(92), 102); g.lineTo(tx(88), 115); g.lineTo(tx(72), 105);
-  g.closePath(); g.endFill();
+  ctx.beginPath();
+  ctx.moveTo(74, 84); ctx.lineTo(92, 102); ctx.lineTo(88, 115); ctx.lineTo(72, 105);
+  ctx.closePath(); ctx.fill();
 
-  // ── Do (chest armor) ──
-  g.lineStyle(1, 0x3a2a5a, 0.8);
-  g.beginFill(0x1a1535);
-  g.moveTo(tx(30), 82); g.quadraticCurveTo(tx(28), 95, tx(30), 140);
-  g.lineTo(tx(74), 140); g.quadraticCurveTo(tx(76), 95, tx(74), 82);
-  g.quadraticCurveTo(tx(52), 75, tx(30), 82);
-  g.endFill();
+  // Do (chest armor)
+  ctx.strokeStyle = "rgba(58,42,90,0.8)"; ctx.lineWidth = 1;
+  ctx.fillStyle = "#1a1535";
+  ctx.beginPath();
+  ctx.moveTo(30, 82); ctx.quadraticCurveTo(28, 95, 30, 140);
+  ctx.lineTo(74, 140); ctx.quadraticCurveTo(76, 95, 74, 82);
+  ctx.quadraticCurveTo(52, 75, 30, 82);
+  ctx.fill(); ctx.stroke();
   // Lacquer panel
-  g.lineStyle(0);
-  g.beginFill(0x7a2200, 0.8);
-  g.moveTo(tx(34), 88); g.quadraticCurveTo(tx(33), 96, tx(34), 136);
-  g.lineTo(tx(70), 136); g.quadraticCurveTo(tx(71), 96, tx(70), 88);
-  g.quadraticCurveTo(tx(52), 82, tx(34), 88);
-  g.endFill();
+  ctx.fillStyle = "rgba(122,34,0,0.8)";
+  ctx.beginPath();
+  ctx.moveTo(34, 100); ctx.quadraticCurveTo(32, 115, 34, 135);
+  ctx.lineTo(70, 135); ctx.quadraticCurveTo(72, 115, 70, 100);
+  ctx.quadraticCurveTo(52, 95, 34, 100);
+  ctx.fill();
 
-  // ── Do himo (ties) ──
-  g.lineStyle(1.5, 0x3a2a5a, 0.8);
-  g.moveTo(tx(34), 86); g.lineTo(tx(22), 74);
-  g.moveTo(tx(70), 86); g.lineTo(tx(82), 74);
-  g.lineStyle(0); ellipse(22, 74, 2.5, 2.5, 0x3a2a5a); ellipse(82, 74, 2.5, 2.5, 0x3a2a5a);
+  // Neck
+  ctx.fillStyle = "#d4a574";
+  ctx.fillRect(46, 55, 12, 12);
 
-  // ── Kote (gloves) ──
-  ellipse(14, 108, 8, 11, 0x1a1535);
-  ellipse(14, 113, 5, 4, 0x2a2040);
-  ellipse(90, 106, 8, 11, 0x1a1535);
-  ellipse(90, 111, 5, 4, 0x2a2040);
-
-  // ── Men (helmet) ──
-  g.lineStyle(1, 0x3a2a5a, 0.8);
-  g.beginFill(0x1a1030);
-  g.moveTo(tx(32), 36); g.quadraticCurveTo(tx(30), 48, tx(32), 72);
-  g.quadraticCurveTo(tx(42), 78, tx(52), 78);
-  g.quadraticCurveTo(tx(62), 78, tx(72), 72);
-  g.quadraticCurveTo(tx(74), 48, tx(72), 36);
-  g.quadraticCurveTo(tx(62), 28, tx(52), 28);
-  g.quadraticCurveTo(tx(42), 28, tx(32), 36);
-  g.endFill();
-  // Men top
-  g.lineStyle(0.5, 0x3a2a5a, 0.5);
-  ellipse(52, 32, 20, 7, 0x2a2040);
-  // Mengane (face grille)
-  g.lineStyle(1.2, 0x4a3a6a, 0.9);
-  for (let i = 0; i < 9; i++) {
-    g.moveTo(tx(36), 40 + i * 3.5); g.lineTo(tx(68), 40 + i * 3.5);
+  // Men (head armor)
+  ctx.fillStyle = "#0d1535";
+  ctx.beginPath();
+  ctx.arc(52, 40, 22, 0, Math.PI * 2); ctx.fill();
+  // Men-gane (face grille)
+  ctx.strokeStyle = "#3a3a5a"; ctx.lineWidth = 1.5;
+  for (let gy = 30; gy < 50; gy += 4) {
+    ctx.beginPath(); ctx.moveTo(36, gy); ctx.lineTo(68, gy); ctx.stroke();
   }
-  // Tsuki-dare
-  g.lineStyle(0); g.beginFill(0x1a1535);
-  g.moveTo(tx(40), 72); g.lineTo(tx(38), 80);
-  g.quadraticCurveTo(tx(52), 84, tx(66), 80); g.lineTo(tx(64), 72);
-  g.closePath(); g.endFill();
-  // Men-himo (ties)
-  g.lineStyle(2, 0x2a2050, 0.7);
-  g.moveTo(tx(32), 44); g.quadraticCurveTo(tx(20), 52, tx(14), 68);
-  g.moveTo(tx(72), 44); g.quadraticCurveTo(tx(84), 52, tx(90), 68);
+  // Tsuki-dare (throat protector)
+  ctx.fillStyle = "#1a1535";
+  ctx.fillRect(38, 50, 28, 10);
 
-  // ── Shinai (bamboo sword) ──
-  let shinaiAngle;
-  if (pose === "attack") {
-    shinaiAngle = attackZone === "head" ? -80 : attackZone === "wrist" ? -30 : attackZone === "waist" ? 35 : -5;
-  } else if (pose === "hit") {
-    shinaiAngle = -25;
-  } else {
-    shinaiAngle = -12;
-  }
+  // Kote (gloves)
+  ctx.fillStyle = "#1a1535";
+  ctx.beginPath(); ctx.ellipse(14, 112, 8, 6, -0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(90, 112, 8, 6, 0.3, 0, Math.PI * 2); ctx.fill();
 
-  const pivotX = tx(88);
-  const pivotY = 108;
-  const rad = (shinaiAngle * Math.PI) / 180 * s;
+  // Shinai (bamboo sword)
   const shinaiLen = 85;
-
-  const tipX = pivotX + Math.sin(rad) * shinaiLen * (flip ? -1 : 1);
+  let rad;
+  if (pose === "attack") {
+    if (attackZone === "head") rad = -0.3;
+    else if (attackZone === "wrist") rad = 0.4;
+    else if (attackZone === "waist") rad = 0.8;
+    else if (attackZone === "thrust") rad = -0.1;
+    else rad = -0.3;
+  } else { rad = -0.15; }
+  const pivotX = 85, pivotY = 108;
+  // Blade
+  ctx.strokeStyle = "#c4a45a"; ctx.lineWidth = 3;
+  const tipX = pivotX + Math.sin(rad) * shinaiLen;
   const tipY = pivotY - Math.cos(rad) * shinaiLen;
-
-  // Shaft
-  g.lineStyle(3.5, 0xc4a050, 1);
-  g.moveTo(pivotX, pivotY); g.lineTo(tipX, tipY);
-  g.lineStyle(2.5, 0xd4b876, 0.8);
-  g.moveTo(pivotX, pivotY); g.lineTo(tipX, tipY);
-
+  ctx.beginPath(); ctx.moveTo(pivotX, pivotY); ctx.lineTo(tipX, tipY); ctx.stroke();
   // Tsuba (guard)
-  const tsubaX = pivotX + Math.sin(rad) * 8 * (flip ? -1 : 1);
-  const tsubaY = pivotY - Math.cos(rad) * 8;
-  ellipse(flip ? 120 - tsubaX : tsubaX, tsubaY, 5, 5, 0x6b4e1b);
-
-  // Sakigawa (tip)
-  const sakiX = pivotX + Math.sin(rad) * (shinaiLen - 4) * (flip ? -1 : 1);
+  ctx.fillStyle = "#6b4e1b";
+  const tsubaX = pivotX + Math.sin(rad) * 8;
+  const tsubaY2 = pivotY - Math.cos(rad) * 8;
+  ctx.beginPath(); ctx.ellipse(tsubaX, tsubaY2, 5, 5, 0, 0, Math.PI * 2); ctx.fill();
+  // Tip
+  ctx.fillStyle = "#f5f0e0";
+  const sakiX = pivotX + Math.sin(rad) * (shinaiLen - 4);
   const sakiY = pivotY - Math.cos(rad) * (shinaiLen - 4);
-  ellipse(flip ? 120 - sakiX : sakiX, sakiY, 3, 4, 0xf5f0e0);
+  ctx.beginPath(); ctx.ellipse(sakiX, sakiY, 3, 4, 0, 0, Math.PI * 2); ctx.fill();
 
-  // Handle
-  g.lineStyle(4, 0x2a1a0a, 1);
-  const hx = pivotX - Math.sin(rad) * 6 * (flip ? -1 : 1);
-  const hy = pivotY + Math.cos(rad) * 6;
-  g.moveTo(hx, hy); g.lineTo(pivotX, pivotY);
+  ctx.restore();
+}
+
+function drawReferee(ctx, x, y, scale, flagUp) {
+  ctx.save();
+  ctx.translate(x, y);
+  const s = scale;
+  // Head
+  ctx.fillStyle = "#d4a574";
+  ctx.beginPath(); ctx.arc(0, -15 * s, 5 * s, 0, Math.PI * 2); ctx.fill();
+  // Body (white shirt)
+  ctx.fillStyle = "#f0f0f0";
+  ctx.fillRect(-7 * s, -10 * s, 14 * s, 20 * s);
+  // Tie
+  ctx.fillStyle = "#8b1a1a";
+  ctx.fillRect(-1, -10 * s, 2, 12 * s);
+  // Pants
+  ctx.fillStyle = "#2a2a2a";
+  ctx.fillRect(-7 * s, 10 * s, 14 * s, 14 * s);
+  // Red flag (left)
+  ctx.strokeStyle = "#8b6914"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-10, -5); ctx.lineTo(-10, flagUp ? -30 : -12); ctx.stroke();
+  ctx.fillStyle = flagUp ? "#E53935" : "rgba(68,34,34,0.3)";
+  ctx.fillRect(-18, flagUp ? -38 : -18, 10, 7);
+  // White flag (right)
+  ctx.beginPath(); ctx.moveTo(10, -5); ctx.lineTo(10, flagUp ? -30 : -12); ctx.stroke();
+  ctx.fillStyle = flagUp ? "#f0f0f0" : "rgba(68,68,68,0.3)";
+  ctx.fillRect(8, flagUp ? -38 : -18, 10, 7);
+  ctx.restore();
+}
+
+function drawScene(canvas, sceneState) {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Wooden floor
+  ctx.fillStyle = "#D4B88C";
+  ctx.fillRect(0, 0, W, H);
+  // Wood grain
+  ctx.strokeStyle = "rgba(139,107,66,0.18)"; ctx.lineWidth = 1;
+  for (let i = 1; i <= 15; i++) {
+    ctx.beginPath(); ctx.moveTo(i * 25, 0); ctx.lineTo(i * 25, H); ctx.stroke();
+  }
+  // Green boundary
+  ctx.strokeStyle = "#2E7D32"; ctx.lineWidth = 2.5;
+  ctx.strokeRect(16, 16, W - 32, H - 32);
+  // Center circle
+  ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.ellipse(W / 2, H / 2, 50, 30, 0, 0, Math.PI * 2); ctx.stroke();
+  // Cross marks
+  ctx.strokeStyle = "#2E7D32"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(140, H / 2); ctx.lineTo(162, H / 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(238, H / 2); ctx.lineTo(260, H / 2); ctx.stroke();
+
+  const { distance, playerPose, opponentPose, playerHit, opponentHit,
+          attackZone, opponentZone, flags, semeShake } = sceneState;
+
+  // Distance → position
+  const gap = distance === "far" ? 80 : distance === "issoku" ? 30 : 0;
+  const playerX = W / 2 - 60 - gap / 2;
+  const opponentX = W / 2 + gap / 2 - 60;
+  const fighterY = 30;
+
+  // Draw player
+  drawFighter(ctx, playerX, fighterY, {
+    pose: playerPose, attackZone, hit: playerHit, flip: false, semeShake,
+  });
+  // Draw opponent
+  drawFighter(ctx, opponentX, fighterY, {
+    pose: opponentPose, attackZone: opponentZone, hit: opponentHit, flip: true, semeShake: -semeShake * 0.6,
+  });
+
+  // Referees
+  const refPositions = [
+    { x: 22, y: 140 },
+    { x: W - 22, y: 140 },
+    { x: W / 2, y: H - 25 },
+  ];
+  refPositions.forEach((rp, i) => {
+    const sc = i === 2 ? 1.1 : 0.85;
+    const flagUp = flags && flags[i];
+    drawReferee(ctx, rp.x, rp.y, sc, flagUp);
+  });
 }
 
 /* ══════════════════════════════════════════════
-   PixiJS Scene Manager
+   Canvas Scene Hook
    ══════════════════════════════════════════════ */
-function usePixiScene(canvasRef, sceneState) {
-  const appRef = useRef(null);
-  const playerGfx = useRef(null);
-  const opponentGfx = useRef(null);
-  const courtGfx = useRef(null);
-  const refGfx = useRef([]);
-  const flagSprites = useRef([]);
-  const particlesRef = useRef(null);
-
+function useCanvasScene(canvasRef, sceneState) {
   useEffect(() => {
-    if (!canvasRef.current || appRef.current) return;
-
-    const app = new PIXI.Application({
-      width: 400, height: 320,
-      backgroundColor: 0xD4B88C,
-      view: canvasRef.current,
-      antialias: true,
-      resolution: window.devicePixelRatio || 1,
-      autoDensity: true,
-    });
-    appRef.current = app;
-
-    // Court lines
-    const court = new PIXI.Graphics();
-    // Green boundary
-    court.lineStyle(2.5, 0x2E7D32, 1);
-    court.drawRect(16, 16, 368, 288);
-    // Blue inner
-    court.lineStyle(1, 0x1565C0, 0.3);
-    court.drawRect(14, 14, 372, 292);
-    // Center circle
-    court.lineStyle(1.5, 0xFFFFFF, 0.15);
-    court.drawEllipse(200, 160, 50, 30);
-    // Cross marks
-    court.lineStyle(2.5, 0x2E7D32, 1);
-    court.moveTo(140, 160); court.lineTo(162, 160);
-    court.moveTo(238, 160); court.lineTo(260, 160);
-    // Wood grain
-    court.lineStyle(1, 0x8B6B42, 0.18);
-    for (let i = 1; i <= 15; i++) {
-      court.moveTo(i * 25, 0); court.lineTo(i * 25, 320);
-    }
-    app.stage.addChild(court);
-    courtGfx.current = court;
-
-    // Referees (3)
-    for (let i = 0; i < 3; i++) {
-      const ref = new PIXI.Graphics();
-      refGfx.current.push(ref);
-      app.stage.addChild(ref);
-
-      // Flags for each referee
-      const flag = new PIXI.Graphics();
-      flagSprites.current.push(flag);
-      app.stage.addChild(flag);
-    }
-
-    // Particles container for effects
-    const particles = new PIXI.Container();
-    particlesRef.current = particles;
-    app.stage.addChild(particles);
-
-    // Player & opponent
-    const pg = new PIXI.Graphics();
-    const og = new PIXI.Graphics();
-    playerGfx.current = pg;
-    opponentGfx.current = og;
-    app.stage.addChild(pg);
-    app.stage.addChild(og);
-
-    return () => {
-      app.destroy(true);
-      appRef.current = null;
-    };
-  }, [canvasRef]);
-
-  // Update scene on state change
-  useEffect(() => {
-    if (!appRef.current || !playerGfx.current) return;
-    const { distance, playerPose, opponentPose, playerHit, opponentHit,
-            attackZone, opponentZone, flags, semeShake } = sceneState;
-
-    // Distance → position
-    const gap = distance === "far" ? 80 : distance === "issoku" ? 30 : 0;
-    const playerX = 200 - 60 - gap / 2;
-    const opponentX = 200 + gap / 2 - 60;
-    const fighterY = 30;
-
-    // Draw player
-    const pg = playerGfx.current;
-    drawFighterFrame(pg, {
-      pose: playerPose, attackZone, hit: playerHit, flip: false, semeShake,
-    });
-    pg.position.set(playerX, fighterY);
-
-    // Draw opponent
-    const og = opponentGfx.current;
-    drawFighterFrame(og, {
-      pose: opponentPose, attackZone: opponentZone, hit: opponentHit, flip: true, semeShake: -semeShake * 0.6,
-    });
-    og.position.set(opponentX, fighterY);
-
-    // Draw referees
-    const refPositions = [
-      { x: 12, y: 130 },   // left
-      { x: 365, y: 130 },  // right
-      { x: 188, y: 285 },  // main (bottom center)
-    ];
-    refGfx.current.forEach((ref, i) => {
-      ref.clear();
-      const rp = refPositions[i];
-      const sc = i === 2 ? 1.1 : 0.85;
-      // Head
-      ref.lineStyle(0); ref.beginFill(0xd4a574);
-      ref.drawCircle(rp.x, rp.y - 15 * sc, 5 * sc); ref.endFill();
-      // Body (white shirt)
-      ref.beginFill(0xf0f0f0);
-      ref.drawRect(rp.x - 7 * sc, rp.y - 10 * sc, 14 * sc, 20 * sc);
-      ref.endFill();
-      // Tie
-      ref.beginFill(0x8b1a1a);
-      ref.drawRect(rp.x - 1, rp.y - 10 * sc, 2, 12 * sc);
-      ref.endFill();
-      // Pants
-      ref.beginFill(0x2a2a2a);
-      ref.drawRect(rp.x - 7 * sc, rp.y + 10 * sc, 14 * sc, 14 * sc);
-      ref.endFill();
-    });
-
-    // Flags
-    flagSprites.current.forEach((fg, i) => {
-      fg.clear();
-      const rp = refPositions[i];
-      const isUp = flags && flags[i];
-      // Red flag (left hand)
-      fg.lineStyle(1, 0x8b6914, 0.8);
-      fg.moveTo(rp.x - 10, rp.y - 5); fg.lineTo(rp.x - 10, rp.y - (isUp ? 30 : 12));
-      fg.lineStyle(0); fg.beginFill(isUp ? 0xE53935 : 0x442222, isUp ? 1 : 0.3);
-      fg.drawRect(rp.x - 18, rp.y - (isUp ? 38 : 18), 10, 7);
-      fg.endFill();
-      // White flag (right hand)
-      fg.lineStyle(1, 0x8b6914, 0.8);
-      fg.moveTo(rp.x + 10, rp.y - 5); fg.lineTo(rp.x + 10, rp.y - (isUp ? 30 : 12));
-      fg.lineStyle(0); fg.beginFill(isUp ? 0xf0f0f0 : 0x444444, isUp ? 1 : 0.3);
-      fg.drawRect(rp.x + 8, rp.y - (isUp ? 38 : 18), 10, 7);
-      fg.endFill();
-    });
-
-    // Fumikomi particle effect
-    const pc = particlesRef.current;
-    while (pc.children.length > 20) pc.removeChildAt(0);
-
-  }, [sceneState]);
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    canvas.width = 400;
+    canvas.height = 320;
+    drawScene(canvas, sceneState);
+  }, [canvasRef, sceneState]);
 }
 
 export default function Battle() {
@@ -401,14 +300,14 @@ export default function Battle() {
   const semeTickRef = useRef(0);
   const kiaiTimeoutRef = useRef(null);
 
-  // PixiJS scene
+  // Canvas scene
   const sceneState = {
     distance: state.distance, playerPose, opponentPose,
     playerHit, opponentHit, attackZone,
     opponentZone: lastResult?.opponent_zone,
     flags, semeShake,
   };
-  usePixiScene(canvasRef, sceneState);
+  useCanvasScene(canvasRef, sceneState);
 
   const startBattle = useCallback(async () => {
     setPhase("countdown"); setCountdown(3);
@@ -651,7 +550,7 @@ export default function Battle() {
         <span style={{ fontSize: 9, color: C.brass, width: 28, textAlign: "right" }}>나</span>
       </div>
 
-      {/* PixiJS Canvas */}
+      {/* Canvas */}
       <div style={{ borderRadius: 14, overflow: "hidden", position: "relative" }}>
         <canvas ref={canvasRef} style={{ width: "100%", height: "auto", borderRadius: 14 }} />
         {opening && (
@@ -692,7 +591,7 @@ export default function Battle() {
         <button onClick={activateKiai} disabled={kiai} style={{ ...btn, width: "100%", position: "relative", overflow: "hidden", background: kiai ? "rgba(195,163,95,.18)" : C.surfaceAlt, borderColor: kiai ? C.brass : C.line }}>
           {kiai && <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: `${(kiaiTimer / 1.5) * 100}%`, background: "rgba(195,163,95,.15)", transition: "width 50ms linear" }} />}
           <span style={{ fontSize: 13, fontWeight: 700, color: kiai ? C.brass : C.paperDim, position: "relative", zIndex: 1 }}>
-            {kiai ? `🔥 기합! (${kiaiTimer.toFixed(1)}s) → 지금 타격!` : "기합 (탭 → 1.5초 내 타격!)"}
+            {kiai ? `기합! (${kiaiTimer.toFixed(1)}s) → 지금 타격!` : "기합 (탭 → 1.5초 내 타격!)"}
           </span>
         </button>
 
@@ -703,11 +602,7 @@ export default function Battle() {
             const disabled = !canStrike;
             return (
               <button key={z.key} onClick={() => doAction("strike", z.key)} disabled={disabled}
-                style={{ ...btn, opacity: disabled ? .35 : 1, background: isOpening ? "rgba(195,163,95,.12)" : C.surfaceAlt, borderColor: isOpening ? C.brass : C.line, boxShadow: isOpening ? `0 0 12px rgba(195,163,95,.2)` : "none", padding: "14px 0" }}
-                onPointerDown={e => { if (!disabled) { e.currentTarget.style.transform = "scale(.93)"; e.currentTarget.style.background = "rgba(155,58,44,.15)"; } }}
-                onPointerUp={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = isOpening ? "rgba(195,163,95,.12)" : C.surfaceAlt; }}
-                onPointerLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = isOpening ? "rgba(195,163,95,.12)" : C.surfaceAlt; }}
-              >
+                style={{ ...btn, opacity: disabled ? .35 : 1, background: isOpening ? "rgba(195,163,95,.12)" : C.surfaceAlt, borderColor: isOpening ? C.brass : C.line, boxShadow: isOpening ? `0 0 12px rgba(195,163,95,.2)` : "none", padding: "14px 0" }}>
                 {isOpening && <span style={{ position: "absolute", top: 3, right: 6, fontSize: 9, color: C.brass, fontWeight: 700, animation: "pulse .5s ease-in-out infinite" }}>빈틈!</span>}
                 <span style={{ fontFamily: "serif", fontSize: 22, fontWeight: 800, color: C.brass }}>{z.kanji}</span>
                 <span style={{ fontSize: 10, color: C.paperDim }}>{z.label}</span>
