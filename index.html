@@ -2,82 +2,128 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>한국 검도 세대별 선수 종합 리포트 2026</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Bebas+Neue&display=swap');
 :root {
-  --bg:#0a0a0a; --bg2:#111; --bg3:#161616;
-  --border:#1e1e1e; --border2:#2a2a2a;
-  --text:#e0e0e0; --text2:#888; --text3:#555;
-  --gold:#c9a84c; --gold2:#f5c842;
-  --blue2:#4a90d9; --red2:#e05555;
-  --green2:#4acc7a; --purple2:#9a60e0;
+  --bg:#0a0c0f; --bg2:#12151a; --bg3:#171c22; --bg4:#1d232b;
+  --border:#1a1f26; --border2:#242b34;
+  --text:#e9ebee; --text2:#8d95a1; --text3:#525963;
+  --gold:#d9b968; --gold2:#f0cd7c;
+  --blue2:#5c9ce0; --blue-soft:#7fb3ea; --red2:#e2685a; --green2:#4fc088; --purple2:#a077e6;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:'Noto Sans KR',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:radial-gradient(ellipse 900px 500px at 50% -10%, #141a22 0%, transparent 60%), var(--bg);
+  color:var(--text);
+  display:flex;justify-content:center;
+}
+.mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Consolas,monospace;}
+.tab-nums{font-variant-numeric:tabular-nums;}
 
-/* HEADER */
-.hd{background:linear-gradient(135deg,#0a0a0a,#111,#0d1a2e);border-bottom:1px solid var(--border2);padding:22px 20px 16px;}
-.h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#fff;}
-.hsub{font-size:11px;color:var(--text3);margin-top:5px;}
-.hbadges{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
-.hb{font-size:10px;font-weight:700;padding:2px 9px;border-radius:2px;border:1px solid;}
-.hb-b{border-color:var(--blue2);color:var(--blue2);}
+/* ============ APP SHELL ============ */
+.app{
+  width:100%;max-width:560px;min-height:100vh;
+  background:var(--bg2);
+  display:flex;flex-direction:column;position:relative;
+  box-shadow:0 0 60px rgba(0,0,0,.4);
+}
+
+/* topbar */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 12px;border-bottom:1px solid var(--border);
+  background:rgba(18,21,26,.92);backdrop-filter:blur(10px);
+}
+.brand{display:flex;align-items:center;gap:9px;min-width:0;}
+.brand-mark{
+  width:26px;height:26px;border-radius:7px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--gold),#a3801f);
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.brand-text{min-width:0;}
+.brand-h1{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1px;color:#fff;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brand-sub{font-size:9.5px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.sync{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--text3);}
+.sync-dot{width:5px;height:5px;border-radius:50%;background:var(--green2);box-shadow:0 0 0 3px rgba(79,192,136,.15);animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+@media (prefers-reduced-motion:reduce){.sync-dot{animation:none;}}
+.icon-btn{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;flex-shrink:0;
+}
+.icon-btn:hover{color:#fff;border-color:var(--text3);}
+
+/* screens */
+.screens{flex:1;position:relative;overflow:hidden;}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:16px 16px 92px;display:none;}
+.screen.active{display:block;}
+
+/* ============ HOME ============ */
+.hero-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+.hb{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:3px;border:1px solid;}
+.hb-b{border-color:var(--blue2);color:var(--blue-soft);}
 .hb-g{border-color:var(--green2);color:var(--green2);}
 .hb-r{border-color:var(--red2);color:var(--red2);}
 .hb-p{border-color:var(--purple2);color:var(--purple2);}
 .hb-gold{border-color:var(--gold);color:var(--gold);}
 
-/* NAV */
-.nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
-.nav::-webkit-scrollbar{display:none;}
-.nt{padding:11px 18px;font-size:11.5px;font-weight:700;color:var(--text3);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;}
-.nt:hover{color:var(--text);}
-.nt.on{color:var(--gold2);border-bottom-color:var(--gold2);}
-.search-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);}
-.search-input{flex:1;background:#111;border:1px solid var(--border2);border-radius:4px;padding:8px 12px;color:#fff;font-size:13px;outline:none;}
-.search-input:focus{border-color:var(--gold2);}
-.search-input::placeholder{color:var(--text3);}
-.search-count{font-size:11px;color:var(--text3);white-space:nowrap;min-width:90px;text-align:right;}
-.search-clear{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;display:none;}
-.search-clear:hover{color:#fff;}
-tr.search-hide{display:none;}
-tr.search-match td{background:rgba(245,200,66,0.07);}
-mark.sm{background:var(--gold2);color:#111;padding:0 2px;border-radius:2px;font-weight:700;}
-.sec.search-hide-sec{display:none;}
+.hero{margin-bottom:16px;}
+.hero-eyebrow{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.hero-num{font-size:50px;font-weight:800;line-height:1;letter-spacing:-1px;}
+.hero-label{font-size:11.5px;color:var(--text2);margin-top:7px;line-height:1.6;}
 
-/* CONTENT */
-.ct{padding:16px 14px;max-width:1200px;}
-.pn{display:none;} .pn.on{display:block;}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:22px;}
+.stat-tile{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;}
+.stat-n{font-size:19px;font-weight:800;}
+.stat-l{font-size:9.5px;color:var(--text2);margin-top:3px;}
 
-/* SECTION */
-.sec{margin-bottom:24px;}
-.sec-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
-.sec-hd h2{font-size:13px;font-weight:700;color:#fff;}
-.sb{font-size:10px;font-weight:700;padding:2px 8px;border-radius:2px;}
-.sb-elem{background:rgba(74,144,217,0.15);color:#7ab8f5;}
-.sb-mid{background:rgba(74,144,217,0.12);color:var(--blue2);}
-.sb-hi{background:rgba(74,204,122,0.10);color:var(--green2);}
-.sb-univ{background:rgba(224,85,85,0.10);color:var(--red2);}
-.sb-real{background:rgba(154,96,224,0.10);color:var(--purple2);}
-.sb-natl{background:rgba(201,168,76,0.12);color:var(--gold);}
-.sb-jp{background:rgba(224,85,85,0.14);color:#ff8a8a;}
+.sec-title{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 10px;padding-top:4px;}
+.sec-title h2{font-size:13px;font-weight:700;color:#fff;}
 
-/* TABLE */
-.tw{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:680px;}
-thead th{background:var(--bg3);color:var(--text3);font-weight:500;padding:7px 9px;text-align:left;border-bottom:1px solid var(--border2);font-size:10px;letter-spacing:.4px;white-space:nowrap;}
-tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
-tbody tr:hover{background:var(--bg3);}
-tbody td{padding:8px 9px;color:#b0b0b0;vertical-align:middle;line-height:1.4;white-space:nowrap;}
-td.note{white-space:normal;min-width:160px;}
-.pn_{font-weight:700;color:#fff;font-size:12.5px;}
-.sch{color:var(--blue2);font-weight:500;}
-.gr{color:var(--gold);font-weight:700;font-size:11px;}
-.note{color:var(--text3);font-size:10px;}
+.dist{display:flex;flex-direction:column;gap:9px;margin-bottom:24px;}
+.dist-row{display:flex;align-items:center;gap:10px;}
+.dist-label{width:44px;flex-shrink:0;font-size:11px;color:var(--text2);font-weight:600;}
+.dist-track{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.dist-fill{height:100%;border-radius:4px;}
+.dist-n{width:32px;flex-shrink:0;text-align:right;font-size:11.5px;font-weight:700;}
 
-/* TAG */
+/* ============ ROW CARD (generic, used by 선수/대표 tabs) ============ */
+.psuper{margin-bottom:6px;}
+.psuper-hd{font-size:12px;font-weight:800;color:var(--gold2);letter-spacing:.3px;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.psuper:first-child .psuper-hd{margin-top:0;}
+.grp{margin-bottom:16px;}
+.grp-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.grp-hd h3{font-size:11.5px;font-weight:700;color:var(--text);flex:1;min-width:0;}
+.grp-count{font-size:10px;color:var(--text3);font-weight:600;}
+.grp-list{display:flex;flex-direction:column;gap:7px;}
+
+.rowcard{display:flex;gap:11px;align-items:flex-start;background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:11px 12px;transition:border-color .15s,background .15s;}
+.rowcard.flash{border-color:var(--gold);background:rgba(217,185,104,.08);}
+.avatar{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;}
+.av-elem,.av-mid{background:linear-gradient(135deg,var(--blue2),#3d6ea8);}
+.av-hi{background:linear-gradient(135deg,var(--green2),#2f8a5f);}
+.av-univ{background:linear-gradient(135deg,var(--red2),#a8392c);}
+.av-real{background:linear-gradient(135deg,var(--purple2),#6d4bb0);}
+.av-natl{background:linear-gradient(135deg,var(--gold),#a3801f);}
+.av-jp{background:linear-gradient(135deg,#e2685a,#8a2e24);}
+.rc-body{flex:1;min-width:0;}
+.rc-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.rc-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(217,185,104,.12);color:var(--gold);flex-shrink:0;}
+.rc-name{font-size:13.5px;font-weight:800;color:#fff;}
+.rc-school{font-size:10.5px;color:var(--blue-soft);margin-top:2px;}
+.rc-meta{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.rc-chip{background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--text2);}
+.rc-chip b{color:var(--text3);font-weight:700;margin-right:2px;}
+.rc-note{font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.6;}
+.rc-note strong{color:var(--gold2);}
+
+/* tag chips embedded in row card text */
 .tag{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;margin-left:3px;vertical-align:middle;}
 .tw_{background:var(--gold2);color:#000;}
 .tg_{background:var(--green2);color:#000;}
@@ -86,298 +132,500 @@ td.note{white-space:normal;min-width:160px;}
 .tp_{background:var(--purple2);color:#fff;}
 .tgr{background:#444;color:#ddd;}
 
-/* TRACK */
-.tk{display:flex;gap:4px;flex-wrap:wrap;}
-.yw{font-size:9px;font-weight:700;padding:2px 6px;border-radius:2px;white-space:nowrap;background:rgba(245,200,66,0.12);color:var(--gold2);border:1px solid rgba(245,200,66,0.25);}
-.yt{font-size:9px;padding:2px 6px;border-radius:2px;white-space:nowrap;background:rgba(74,144,217,0.10);color:var(--blue2);border:1px solid rgba(74,144,217,0.2);}
-.yr{font-size:9px;padding:2px 6px;border-radius:2px;white-space:nowrap;background:rgba(224,85,85,0.08);color:var(--red2);border:1px solid rgba(224,85,85,0.18);}
+/* track chips (주요 성적 컬럼) */
+.tk{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px;}
+.yw{font-size:9px;font-weight:700;padding:2px 6px;border-radius:2px;white-space:nowrap;background:rgba(240,205,124,0.12);color:var(--gold2);border:1px solid rgba(240,205,124,0.25);}
+.yt{font-size:9px;padding:2px 6px;border-radius:2px;white-space:nowrap;background:rgba(92,156,224,0.10);color:var(--blue2);border:1px solid rgba(92,156,224,0.2);}
+.yr{font-size:9px;padding:2px 6px;border-radius:2px;white-space:nowrap;background:rgba(226,104,90,0.08);color:var(--red2);border:1px solid rgba(226,104,90,0.18);}
 
-/* TOP3 카드 */
-.t3grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:6px;}
-.t3block{background:var(--bg2);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
-.t3head{padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:.5px;}
-.t3-elem{background:rgba(74,144,217,0.12);color:#7ab8f5;border-bottom:1px solid rgba(74,144,217,0.2);}
-.t3-mid{background:rgba(74,144,217,0.10);color:var(--blue2);border-bottom:1px solid rgba(74,144,217,0.18);}
-.t3-hi{background:rgba(74,204,122,0.08);color:var(--green2);border-bottom:1px solid rgba(74,204,122,0.15);}
-.t3-univ{background:rgba(224,85,85,0.08);color:var(--red2);border-bottom:1px solid rgba(224,85,85,0.15);}
-.t3-real{background:rgba(154,96,224,0.08);color:var(--purple2);border-bottom:1px solid rgba(154,96,224,0.15);}
-.t3row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);}
-.t3row:last-child{border-bottom:none;}
-.t3rank{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;color:var(--text3);min-width:20px;}
-.t3rank.r1{color:var(--gold2);}
-.t3rank.r2{color:#aaa;}
-.t3rank.r3{color:#8b6914;}
-.t3body{flex:1;}
-.t3name{font-weight:700;color:#fff;font-size:13px;line-height:1.3;}
-.t3org{font-size:10px;color:var(--blue2);margin-top:2px;}
-.t3ev{font-size:9.5px;color:var(--text2);margin-top:5px;line-height:1.6;}
-.t3ev strong{color:var(--gold2);}
+/* ============ PLAYERS TAB CHROME ============ */
+.search{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;margin-bottom:12px;}
+.search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:inherit;}
+.search input::placeholder{color:var(--text3);}
+.chips{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 16px;padding:0 16px 2px;scrollbar-width:none;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{flex-shrink:0;font-size:11px;font-weight:600;padding:6px 13px;border-radius:16px;border:1px solid var(--border2);color:var(--text2);cursor:pointer;background:var(--bg3);white-space:nowrap;}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#1a1305;}
 
-/* 파이프라인 */
-.pl-row{display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:3px;margin-bottom:5px;flex-wrap:wrap;font-size:11.5px;}
-.pl-s{color:var(--blue2);font-weight:700;}
-.pl-a{color:var(--text3);}
-.pl-u{color:var(--green2);font-weight:700;}
-.pl-r{color:var(--purple2);font-weight:700;}
-.pl-n{color:var(--text3);font-size:10px;}
-.pl-cat{font-size:11px;color:var(--text3);margin:14px 0 6px;font-weight:700;}
-
-/* 매치업 */
-.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;}
-.mc{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:12px 14px;}
+/* ============ ANALYSIS TAB (rv/pl raw sections) ============ */
+.sec-block{margin-bottom:22px;}
+.mgrid{display:grid;grid-template-columns:1fr;gap:10px;}
+.mc{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:13px 14px;}
 .mc-t{font-size:10px;color:var(--text3);margin-bottom:8px;}
 .mc-p{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.mc-a{font-weight:700;color:#fff;font-size:13px;}
-.mc-b{font-weight:700;color:var(--red2);font-size:13px;}
+.mc-a{font-weight:800;color:#fff;font-size:14px;}
+.mc-b{font-weight:800;color:var(--red2);font-size:14px;}
 .mc-vs{color:var(--text3);font-size:10px;}
-.mc-d{font-size:10px;color:var(--text2);margin-top:6px;line-height:1.65;}
+.mc-d{font-size:10.5px;color:var(--text2);margin-top:7px;line-height:1.7;}
 .h2h{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border2);}
 .h2h-rec{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px;}
 .h2h-w{font-size:18px;font-weight:800;color:var(--gold2);}
 .h2h-l{font-size:18px;font-weight:800;color:var(--text3);}
 .h2h-sep{font-size:11px;color:var(--text3);}
 .h2h-log{display:flex;flex-direction:column;gap:5px;}
-.h2h-row{display:flex;align-items:center;gap:7px;font-size:10px;}
-.h2h-date{color:var(--text3);min-width:78px;flex-shrink:0;}
+.h2h-row{display:flex;align-items:center;gap:7px;font-size:10px;flex-wrap:wrap;}
+.h2h-date{color:var(--text3);min-width:64px;flex-shrink:0;}
 .h2h-res{font-weight:700;padding:1px 6px;border-radius:2px;font-size:9px;flex-shrink:0;}
-.h2h-res.win{background:rgba(245,200,66,0.15);color:var(--gold2);}
+.h2h-res.win{background:rgba(240,205,124,0.15);color:var(--gold2);}
 .h2h-res.lose{background:rgba(255,255,255,0.06);color:var(--text3);}
 .h2h-ev{color:var(--text2);}
 .h2h-note{margin-top:8px;font-size:9.5px;color:var(--text3);font-style:italic;}
+
+.pl-row{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;flex-wrap:wrap;font-size:11.5px;}
+.pl-s{color:var(--blue2);font-weight:700;}
+.pl-a{color:var(--text3);}
+.pl-u{color:var(--green2);font-weight:700;}
+.pl-r{color:var(--purple2);font-weight:700;}
+.pl-n{color:var(--text3);font-size:10px;}
+.pl-cat{font-size:11px;color:var(--text2);margin:16px 0 7px;font-weight:700;}
+
+/* ============ HOME TOP3 (ov raw section) ============ */
+.t3grid{display:flex;flex-direction:column;gap:12px;margin-bottom:6px;}
+.t3block{background:var(--bg3);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.t3head{padding:9px 13px;font-size:10.5px;font-weight:700;letter-spacing:.4px;}
+.t3-elem{background:rgba(92,156,224,0.14);color:var(--blue-soft);border-bottom:1px solid rgba(92,156,224,0.22);}
+.t3-mid{background:rgba(92,156,224,0.12);color:var(--blue2);border-bottom:1px solid rgba(92,156,224,0.2);}
+.t3-hi{background:rgba(79,192,136,0.10);color:var(--green2);border-bottom:1px solid rgba(79,192,136,0.18);}
+.t3-univ{background:rgba(226,104,90,0.10);color:var(--red2);border-bottom:1px solid rgba(226,104,90,0.18);}
+.t3-real{background:rgba(160,119,230,0.10);color:var(--purple2);border-bottom:1px solid rgba(160,119,230,0.18);}
+.t3row{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-bottom:1px solid var(--border);}
+.t3row:last-child{border-bottom:none;}
+.t3rank{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;color:var(--text3);min-width:20px;}
+.t3rank.r1{color:var(--gold2);}
+.t3rank.r2{color:#aaa;}
+.t3rank.r3{color:#8b6914;}
+.t3body{flex:1;}
+.t3name{font-weight:800;color:#fff;font-size:13.5px;line-height:1.3;}
+.t3org{font-size:10.5px;color:var(--blue-soft);margin-top:2px;}
+.t3ev{font-size:10px;color:var(--text2);margin-top:6px;line-height:1.65;}
+.t3ev strong{color:var(--gold2);}
+
+.brief{background:linear-gradient(135deg, rgba(217,185,104,.08), rgba(217,185,104,.02));border:1px solid rgba(217,185,104,.18);border-radius:11px;padding:13px 14px;font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:8px;}
+
+.footer-note{text-align:center;padding:18px 10px 6px;font-size:9.5px;color:var(--text3);border-top:1px solid var(--border);margin-top:8px;}
+
+/* ============ NATIONAL TAB TOGGLE ============ */
+.segctl{display:flex;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:4px;margin-bottom:16px;}
+.seg{flex:1;text-align:center;padding:8px 0;border-radius:8px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;}
+.seg.on{background:var(--gold);color:#1a1305;}
+
+/* ============ TAB BAR ============ */
+.tabbar{
+  position:sticky;bottom:0;left:0;right:0;z-index:20;
+  display:flex;background:rgba(18,21,26,.94);backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--text3);cursor:pointer;border:none;background:none;font-family:inherit;}
+.tab svg{width:20px;height:20px;}
+.tab span{font-size:9.5px;font-weight:600;}
+.tab.on{color:var(--gold2);}
+.tab.on svg{filter:drop-shadow(0 0 6px rgba(240,205,124,.35));}
+
+/* ============ SEARCH OVERLAY ============ */
+.overlay{position:absolute;inset:0;z-index:40;background:var(--bg2);display:none;flex-direction:column;}
+.overlay.on{display:flex;}
+.overlay-hd{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);}
+.overlay-hd .search{flex:1;margin:0;}
+.overlay-close{flex-shrink:0;background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px 6px;}
+.overlay-list{flex:1;overflow-y:auto;padding:10px 16px 40px;}
+.overlay-empty{text-align:center;padding:60px 20px;color:var(--text3);font-size:12px;line-height:1.8;}
+.oresult{display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid var(--border);cursor:pointer;}
+.oresult:hover{background:var(--bg3);}
+.oresult .rname{font-size:13px;font-weight:800;color:#fff;}
+.oresult .rschool{font-size:10.5px;color:var(--blue-soft);margin-top:1px;}
+.oresult .rgen{margin-left:auto;font-size:9.5px;font-weight:700;color:var(--text3);flex-shrink:0;}
+mark.sm{background:var(--gold2);color:#111;padding:0 2px;border-radius:2px;font-weight:700;}
 </style>
 </head>
 <body>
 
-<div class="hd">
-  <div class="h1">KOR KUMDO REPORT 2026</div>
-  <div class="hsub">2022–2026 세대별 선수 종합 · 공식대회 대진표 교차검증 · 61개 파일</div>
-  <div class="hbadges">
-    <span class="hb hb-b">초등·중학</span>
-    <span class="hb hb-g">고등</span>
-    <span class="hb hb-r">대학</span>
-    <span class="hb hb-p">실업</span>
-    <span class="hb hb-gold">국가대표</span>
+<div class="app" id="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">⚔</div>
+      <div class="brand-text">
+        <div class="brand-h1" id="brandH1">KOR KUMDO REPORT 2026</div>
+        <div class="brand-sub" id="brandSub">2022–2026 세대별 선수 종합</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="sync mono"><span class="sync-dot"></span><span>2026.06</span></div>
+      <button class="icon-btn" onclick="openSearch()" aria-label="검색">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+    </div>
   </div>
+
+  <div class="screens">
+
+    <!-- ===== HOME ===== -->
+    <div class="screen active" id="s-home">
+      <div class="hero-badges" id="heroBadges"></div>
+      <div class="hero">
+        <div class="hero-eyebrow">TRACKED ATHLETES</div>
+        <div class="hero-num tab-nums" id="heroNum">–</div>
+        <div class="hero-label" id="heroLabel">데이터 불러오는 중…</div>
+      </div>
+      <div class="stat-row" id="statRow"></div>
+      <div class="sec-title"><h2>세대별 분포</h2></div>
+      <div class="dist" id="distRow"></div>
+      <div class="sec-title"><h2>2026 세대별 TOP3</h2></div>
+      <div id="homeTop3"></div>
+      <div class="sec-title"><h2>현장 브리핑</h2></div>
+      <div id="homeBrief"></div>
+      <div class="footer-note" id="footerNote"></div>
+    </div>
+
+    <!-- ===== PLAYERS ===== -->
+    <div class="screen" id="s-players">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#525963" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="pSearch" type="text" placeholder="선수명·학교명 검색" oninput="applyPlayerSearch(this.value)">
+      </div>
+      <div class="chips" id="pChips">
+        <div class="chip on" data-f="all" onclick="setChip(this)">전체</div>
+        <div class="chip" data-f="elem" onclick="setChip(this)">초등</div>
+        <div class="chip" data-f="mid" onclick="setChip(this)">중학</div>
+        <div class="chip" data-f="hi" onclick="setChip(this)">고등</div>
+        <div class="chip" data-f="univ" onclick="setChip(this)">대학</div>
+        <div class="chip" data-f="real" onclick="setChip(this)">실업</div>
+      </div>
+      <div id="playersList"></div>
+    </div>
+
+    <!-- ===== ANALYSIS ===== -->
+    <div class="screen" id="s-analysis">
+      <div id="analysisList"></div>
+    </div>
+
+    <!-- ===== NATIONAL ===== -->
+    <div class="screen" id="s-national">
+      <div class="segctl">
+        <div class="seg on" data-t="natl" onclick="setNatlSeg(this)">🇰🇷 국가대표</div>
+        <div class="seg" data-t="jp" onclick="setNatlSeg(this)">🇯🇵 일본선수</div>
+      </div>
+      <div id="natlList"></div>
+      <div id="jpList" style="display:none;"></div>
+    </div>
+
+  </div>
+
+  <div class="tabbar">
+    <button class="tab on" data-s="home" onclick="setTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span>홈</span>
+    </button>
+    <button class="tab" data-s="players" onclick="setTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4.5 5-6 8-6s6.5 1.5 8 6"/></svg>
+      <span>선수</span>
+    </button>
+    <button class="tab" data-s="analysis" onclick="setTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M12 19V5M20 19v-6"/></svg>
+      <span>분석</span>
+    </button>
+    <button class="tab" data-s="national" onclick="setTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.6L21 9l-5 4.4L17.4 21 12 17.3 6.6 21 8 13.4 3 9l6.6-.4z"/></svg>
+      <span>대표</span>
+    </button>
+  </div>
+
+  <!-- ===== SEARCH OVERLAY ===== -->
+  <div class="overlay" id="searchOverlay">
+    <div class="overlay-hd">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#525963" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="gSearch" type="text" placeholder="선수명·학교명 검색 (예: 심민성, 서석고, 인천고)" oninput="doGlobalSearch(this.value)">
+      </div>
+      <button class="overlay-close" onclick="closeSearch()">✕</button>
+    </div>
+    <div class="overlay-list" id="overlayList">
+      <div class="overlay-empty">이름 또는 학교명을 입력하세요<br>전체 <span id="overlayTotal">–</span>명 중 검색</div>
+    </div>
+  </div>
+
 </div>
 
-<div class="nav">
-  <div class="nt on" onclick="ST('ov',this)">세대별 TOP3</div>
-  <div class="nt" onclick="ST('elem',this)">초등부</div>
-  <div class="nt" onclick="ST('mid',this)">중학부</div>
-  <div class="nt" onclick="ST('hi',this)">고등부</div>
-  <div class="nt" onclick="ST('univ',this)">대학부</div>
-  <div class="nt" onclick="ST('real',this)">실업부</div>
-  <div class="nt" onclick="ST('rv',this)">상대전적</div>
-  <div class="nt" onclick="ST('pl',this)">파이프라인</div>
-  <div class="nt" onclick="ST('natl',this)">국가대표</div>
-  <div class="nt" onclick="ST('jp',this)">🇯🇵 일본선수</div>
-</div>
-
-<div class="search-bar">
-  <input type="text" id="kdSearch" class="search-input" placeholder="선수명·학교명 검색 (예: 심민성, 서석고, 인천고)" oninput="kdDoSearch(this.value)">
-  <button class="search-clear" id="kdClear" onclick="kdClearSearch()">✕</button>
-  <span class="search-count" id="kdCount"></span>
-</div>
-
-<div class="ct" id="ct"></div><!-- 데이터는 render.js가 data.json을 읽어 여기 채웁니다 -->
-
-<div style="text-align:center;padding:14px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);margin-top:8px;">
-  ⚔ 데이터 기준: 2026.06 · 공식대진표 61개 파일 교차검증 · 2022~2026 5개년 누적
-</div>
 <script>
-// ============ 데이터 렌더러 (data.json → DOM) ============
-function kdCellHtml(cell){
-  const cls = cell.class ? ' class="'+cell.class+'"' : '';
-  return '<td'+cls+'>'+cell.html+'</td>';
+// ============ 유틸 ============
+function stripTags(html){ return (html||'').replace(/<[^>]*>/g,''); }
+function escAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+var GEN_LABEL = {elem:'🟦 초등부',mid:'🟦 중학부',hi:'🟩 고등부',univ:'🟥 대학부',real:'🟪 실업부',natl:'🥇 국가대표 · 상비군',jp:'🇯🇵 일본선수'};
+
+function findSection(panel, substr){
+  var found = null;
+  panel.sections.forEach(function(s){ if(s.heading && s.heading.indexOf(substr) > -1) found = s; });
+  return found;
 }
-function kdRenderTableSection(sec){
-  let html = '<div class="sec">';
-  if(sec.badge_text){
-    html += '<div class="sec-hd"><span class="'+sec.badge_cls+'">'+sec.badge_text+'</span><h2>'+sec.heading+'</h2></div>';
-  }
-  html += '<div class="tw"><table><thead><tr>';
-  sec.headers.forEach(h=>{ html += '<th>'+h+'</th>'; });
-  html += '</tr></thead><tbody>';
-  sec.rows.forEach(row=>{
-    html += '<tr>';
-    row.cells.forEach(c=>{ html += kdCellHtml(c); });
-    html += '</tr>';
+
+// ============ 행 카드 렌더러 (모든 표 데이터 → 카드) ============
+function renderRowCard(row, headers, panelId, secIdx, rowIdx){
+  var cells = row.cells;
+  var title=null, school=null, badge=null, note=null, rest=[];
+  cells.forEach(function(c,i){
+    var cls = c.class || '';
+    if(cls.indexOf('pn_') > -1 && !title){ title = c; }
+    else if(cls.indexOf('sch') > -1 && !school){ school = c; }
+    else if(cls.indexOf('gr') > -1 && !badge){ badge = c; }
+    else if(cls.indexOf('note') > -1 && !note){ note = c; }
+    else rest.push({i:i, c:c});
   });
-  html += '</tbody></table></div>';
-  if(sec.extra_html){ html += sec.extra_html; }
+  if(!title){ title = cells[0]; rest = rest.filter(function(r){ return r.i !== 0; }); }
+
+  var trackItems = [], plainItems = [];
+  rest.forEach(function(r){
+    if(r.c.html.indexOf('class="tk"') > -1) trackItems.push(r);
+    else if(r.c.html.trim() !== '') plainItems.push(r);
+  });
+
+  var plain = stripTags(title.html) + ' ' + (school ? stripTags(school.html) : '') + ' ' + (note ? stripTags(note.html) : '');
+  cells.forEach(function(c){ plain += ' ' + stripTags(c.html); });
+  var q = plain.toLowerCase();
+  var initial = stripTags(title.html).charAt(0) || '?';
+  var id = 'pc-' + panelId + '-' + secIdx + '-' + rowIdx;
+
+  var html = '<div class="rowcard" id="' + id + '" data-q="' + escAttr(q) + '">';
+  html += '<div class="avatar av-' + panelId + '">' + initial + '</div>';
+  html += '<div class="rc-body">';
+  html += '<div class="rc-top">';
+  if(badge) html += '<span class="rc-badge">' + badge.html + '</span>';
+  html += '<span class="rc-name">' + title.html + '</span>';
+  html += '</div>';
+  if(school) html += '<div class="rc-school">' + school.html + '</div>';
+  if(plainItems.length){
+    html += '<div class="rc-meta">';
+    plainItems.forEach(function(r){
+      html += '<span class="rc-chip"><b>' + (headers[r.i] || '') + '</b>' + r.c.html + '</span>';
+    });
+    html += '</div>';
+  }
+  trackItems.forEach(function(r){ html += r.c.html; });
+  if(note) html += '<div class="rc-note">' + note.html + '</div>';
+  html += '</div></div>';
+  return html;
+}
+
+function renderPanelGroups(panel){
+  var out = '<div class="psuper" data-panel="' + panel.id + '">';
+  out += '<div class="psuper-hd">' + (GEN_LABEL[panel.id] || panel.id) + '</div>';
+  panel.sections.forEach(function(sec, secIdx){
+    if(sec.type !== 'table') return;
+    out += '<div class="grp">';
+    out += '<div class="grp-hd">';
+    if(sec.badge_text){ out += '<span class="' + (sec.badge_cls || 'sb') + '">' + sec.badge_text + '</span>'; }
+    out += '<h3>' + sec.heading + '</h3>';
+    out += '<span class="grp-count tab-nums">' + sec.rows.length + '</span>';
+    out += '</div>';
+    out += '<div class="grp-list">';
+    sec.rows.forEach(function(row, rowIdx){
+      out += renderRowCard(row, sec.headers, panel.id, secIdx, rowIdx);
+    });
+    out += '</div>';
+    if(sec.extra_html){ out += sec.extra_html; }
+    out += '</div>';
+  });
+  out += '</div>';
+  return out;
+}
+
+function renderRawSec(sec){
+  var html = '<div class="sec-block">';
+  if(sec.heading){ html += '<div class="sec-title"><h2>' + sec.heading + '</h2></div>'; }
+  html += sec.html || '';
   html += '</div>';
   return html;
 }
-function kdRenderRawSection(sec){
-  if(!sec.badge_text) return sec.html; // 뱃지가 없으면 패널 전체가 통짜 raw 블록 (TOP3 등)
-  return '<div class="sec"><div class="sec-hd"><span class="'+sec.badge_cls+'">'+sec.badge_text+'</span><h2>'+sec.heading+'</h2></div>'+sec.html+'</div>';
-}
-function kdRenderPanel(panel){
-  let html = '';
-  panel.sections.forEach(sec=>{
-    html += (sec.type === 'table') ? kdRenderTableSection(sec) : kdRenderRawSection(sec);
-  });
-  return html;
-}
 
-async function kdLoadData(){
-  const ct = document.getElementById('ct');
-  try{
-    const res = await fetch('data.json');
-    if(!res.ok) throw new Error('data.json HTTP '+res.status);
-    const data = await res.json();
-    window.KD_DATA = data; // 디버깅/향후 쿼리용으로 전역 노출
-
-    // 헤더 텍스트 (meta) — 있으면 반영, 실패해도 정적 마크업이 이미 표시되어 있어 안전
-    const h1el = document.querySelector('.h1');
-    if(h1el && data.meta && data.meta.h1) h1el.textContent = data.meta.h1;
-    const hsubel = document.querySelector('.hsub');
-    if(hsubel && data.meta && data.meta.hsub) hsubel.textContent = data.meta.hsub;
-
-    let allHtml = '';
-    data.panels.forEach(panel=>{
-      const cls = 'pn' + (panel.id === 'ov' ? ' on' : '');
-      allHtml += '<div class="'+cls+'" id="p-'+panel.id+'">' + kdRenderPanel(panel) + '</div>';
-    });
-    ct.innerHTML = allHtml;
-  }catch(err){
-    ct.innerHTML = '<div style="padding:40px;text-align:center;color:var(--red2);">'
-      + '⚠️ data.json 로딩 실패: ' + err.message
-      + '<br><span style="color:var(--text3);font-size:11px;">index.html과 data.json이 같은 폴더에 있는지, 로컬에서 여는 경우 파일 프로토콜(file://) 제한 때문일 수 있습니다 — 서버(Vercel/GitHub Pages)로 열어주세요.</span></div>';
+// ============ 홈 탭 ============
+function renderHome(data, panels, counts){
+  var badgesEl = document.getElementById('heroBadges');
+  if(data.meta && data.meta.badges){
+    badgesEl.innerHTML = data.meta.badges.map(function(b){ return '<span class="hb ' + b.cls + '">' + b.text + '</span>'; }).join('');
   }
+
+  var total = data.players_index.length;
+  document.getElementById('heroNum').textContent = total;
+  document.getElementById('heroLabel').textContent = (data.meta && data.meta.hsub) || '';
+
+  var statPicks = [
+    {id:'natl', label:'국가대표·상비군', color:'var(--gold2)'},
+    {id:'univ', label:'대학부', color:'var(--red2)'},
+    {id:'hi', label:'고등부', color:'var(--green2)'}
+  ];
+  document.getElementById('statRow').innerHTML = statPicks.map(function(s){
+    return '<div class="stat-tile"><div class="stat-n tab-nums" style="color:' + s.color + '">' + counts[s.id] + '</div><div class="stat-l">' + s.label + '</div></div>';
+  }).join('');
+
+  var distDefs = [
+    {id:'elem', label:'초등', color:'var(--blue2)'},
+    {id:'mid', label:'중학', color:'var(--blue2)'},
+    {id:'hi', label:'고등', color:'var(--green2)'},
+    {id:'univ', label:'대학', color:'var(--red2)'},
+    {id:'real', label:'실업', color:'var(--purple2)'},
+    {id:'natl', label:'국대', color:'var(--gold)'}
+  ];
+  var maxC = Math.max.apply(null, distDefs.map(function(d){ return counts[d.id]; }));
+  document.getElementById('distRow').innerHTML = distDefs.map(function(d){
+    var w = Math.max(3, Math.round(counts[d.id] / maxC * 100));
+    return '<div class="dist-row"><div class="dist-label">' + d.label + '</div><div class="dist-track"><div class="dist-fill" style="width:' + w + '%;background:' + d.color + '"></div></div><div class="dist-n tab-nums">' + counts[d.id] + '</div></div>';
+  }).join('');
+
+  var ov = panels['ov'];
+  if(ov && ov.sections[0]){ document.getElementById('homeTop3').innerHTML = ov.sections[0].html; }
+
+  var brief = panels['pl'] ? findSection(panels['pl'], '당분간 상위권') : null;
+  document.getElementById('homeBrief').innerHTML = brief ? brief.html : '';
+
+  document.getElementById('footerNote').textContent = '⚔ 데이터 기준: ' + ((data.meta && data.meta.hsub) || '') ;
 }
-kdLoadData();
-</script>
-<script>
-function ST(id,el){
-  document.querySelectorAll('.pn').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
-  document.getElementById('p-'+id).classList.add('on');
+
+// ============ 탭 전환 ============
+function setTab(el){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('on'); });
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   el.classList.add('on');
+  document.getElementById('s-' + el.dataset.s).classList.add('active');
+  document.querySelector('.screens').scrollTop = 0;
+}
+function activateTabById(id){
+  var btn = document.querySelector('.tab[data-s="' + id + '"]');
+  if(btn) setTab(btn);
 }
 
-// ===== 검색 기능 =====
-let kdAllRows = null;
-
-function kdInit(){
-  // 모든 tbody tr을 한 번만 수집 (소속 패널 ID 포함)
-  kdAllRows = [];
-  document.querySelectorAll('.pn').forEach(panel=>{
-    const panelId = panel.id.replace('p-','');
-    panel.querySelectorAll('table tbody tr').forEach(tr=>{
-      kdAllRows.push({tr:tr, panel:panelId, text:tr.textContent});
-    });
+// ============ 선수 탭: 필터/검색 ============
+function setChip(el){
+  document.querySelectorAll('#pChips .chip').forEach(function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+  var f = el.dataset.f;
+  document.querySelectorAll('#s-players .psuper').forEach(function(sup){
+    sup.style.display = (f === 'all' || sup.dataset.panel === f) ? '' : 'none';
+  });
+}
+function applyPlayerSearch(qRaw){
+  var q = qRaw.trim().toLowerCase();
+  document.querySelectorAll('#s-players .rowcard').forEach(function(card){
+    var hay = card.getAttribute('data-q') || '';
+    card.style.display = (!q || hay.indexOf(q) > -1) ? '' : 'none';
+  });
+  document.querySelectorAll('#s-players .grp').forEach(function(grp){
+    var anyVisible = false;
+    grp.querySelectorAll('.rowcard').forEach(function(c){ if(c.style.display !== 'none') anyVisible = true; });
+    grp.style.display = (!q || anyVisible) ? '' : 'none';
   });
 }
 
-function kdClearSearch(){
-  document.getElementById('kdSearch').value='';
-  kdDoSearch('');
+// ============ 대표 탭: 국가대표/일본선수 토글 ============
+function setNatlSeg(el){
+  document.querySelectorAll('#s-national .seg').forEach(function(s){ s.classList.remove('on'); });
+  el.classList.add('on');
+  var t = el.dataset.t;
+  document.getElementById('natlList').style.display = (t === 'natl') ? '' : 'none';
+  document.getElementById('jpList').style.display = (t === 'jp') ? '' : 'none';
 }
 
-function kdDoSearch(qRaw){
-  if(kdAllRows===null) kdInit();
-  const q = qRaw.trim();
-  const clearBtn = document.getElementById('kdClear');
-  const countEl = document.getElementById('kdCount');
-  clearBtn.style.display = q ? 'inline-block' : 'none';
-
-  // 검색어 비었으면 전체 원복
+// ============ 검색 오버레이 ============
+var PLAYERS_INDEX = [];
+function buildSearchIndex(idx){
+  PLAYERS_INDEX = idx;
+  document.getElementById('overlayTotal').textContent = idx.length;
+}
+function openSearch(){
+  document.getElementById('searchOverlay').classList.add('on');
+  var input = document.getElementById('gSearch');
+  input.value = '';
+  doGlobalSearch('');
+  setTimeout(function(){ input.focus(); }, 50);
+}
+function closeSearch(){
+  document.getElementById('searchOverlay').classList.remove('on');
+}
+function doGlobalSearch(qRaw){
+  var q = qRaw.trim().toLowerCase();
+  var listEl = document.getElementById('overlayList');
   if(!q){
-    kdAllRows.forEach(r=>{
-      r.tr.classList.remove('search-hide','search-match');
-      kdUnmark(r.tr);
-    });
-    document.querySelectorAll('.sec').forEach(s=>s.classList.remove('search-hide-sec'));
-    countEl.textContent='';
+    listEl.innerHTML = '<div class="overlay-empty">이름 또는 학교명을 입력하세요<br>전체 ' + PLAYERS_INDEX.length + '명 중 검색</div>';
     return;
   }
-
-  const ql = q.toLowerCase();
-  let matchCount = 0;
-  let firstMatchPanel = null;
-  const secVisible = new Set();
-
-  kdAllRows.forEach(r=>{
-    const hit = r.text.toLowerCase().includes(ql);
-    if(hit){
-      r.tr.classList.remove('search-hide');
-      r.tr.classList.add('search-match');
-      kdMark(r.tr, q);
-      matchCount++;
-      if(!firstMatchPanel) firstMatchPanel = r.panel;
-      const sec = r.tr.closest('.sec');
-      if(sec) secVisible.add(sec);
-    } else {
-      r.tr.classList.add('search-hide');
-      r.tr.classList.remove('search-match');
-      kdUnmark(r.tr);
-    }
-  });
-
-  // 매치 없는 섹션(div.sec) 통째로 숨김 — 표 형태 섹션만 해당
-  document.querySelectorAll('.sec').forEach(sec=>{
-    const hasTable = sec.querySelector('table tbody tr');
-    if(hasTable){
-      sec.classList.toggle('search-hide-sec', !secVisible.has(sec));
-    }
-  });
-
-  countEl.textContent = matchCount + '건 일치';
-
-  // 첫 매치가 있는 탭으로 자동 전환 (현재 탭에 결과가 없을 때만)
-  const curPanel = document.querySelector('.pn.on');
-  const curHasMatch = curPanel && curPanel.querySelector('tr.search-match');
-  if(firstMatchPanel && !curHasMatch){
-    const targetNav = Array.from(document.querySelectorAll('.nt')).find(nt=>
-      nt.getAttribute('onclick').includes("'"+firstMatchPanel+"'")
-    );
-    if(targetNav) ST(firstMatchPanel, targetNav);
+  var results = PLAYERS_INDEX.filter(function(p){
+    return p.name.toLowerCase().indexOf(q) > -1 || (p.school || '').toLowerCase().indexOf(q) > -1;
+  }).slice(0, 100);
+  if(!results.length){
+    listEl.innerHTML = '<div class="overlay-empty">일치하는 선수가 없습니다</div>';
+    return;
   }
+  listEl.innerHTML = results.map(function(p, i){
+    return '<div class="oresult" onclick="jumpToPlayer(' + i + ')"><div><div class="rname">' + p.name + '</div><div class="rschool">' + (p.school || '') + '</div></div><div class="rgen">' + (GEN_LABEL[p.panel] || p.panel) + '</div></div>';
+  }).join('');
+  window.KD_SEARCH_RESULTS = results;
 }
+function jumpToPlayer(i){
+  var p = window.KD_SEARCH_RESULTS[i];
+  if(!p || !p.ref) return;
+  var panelId = p.ref[0], secIdx = p.ref[1], rowIdx = p.ref[2];
+  closeSearch();
 
-function kdMark(tr, q){
-  kdUnmark(tr);
-  const ql = q.toLowerCase();
-  tr.querySelectorAll('td').forEach(td=>{
-    kdMarkNode(td, ql);
-  });
-}
-
-function kdMarkNode(node, ql){
-  for(let i=0;i<node.childNodes.length;i++){
-    const child = node.childNodes[i];
-    if(child.nodeType===3){ // text node
-      const txt = child.textContent;
-      const lower = txt.toLowerCase();
-      const idx = lower.indexOf(ql);
-      if(idx>-1){
-        const before = txt.slice(0,idx);
-        const match = txt.slice(idx, idx+ql.length);
-        const after = txt.slice(idx+ql.length);
-        const frag = document.createDocumentFragment();
-        if(before) frag.appendChild(document.createTextNode(before));
-        const mk = document.createElement('mark');
-        mk.className='sm';
-        mk.textContent=match;
-        frag.appendChild(mk);
-        if(after) frag.appendChild(document.createTextNode(after));
-        node.replaceChild(frag, child);
-        i += 2; // skip past inserted nodes
-      }
-    } else if(child.nodeType===1 && child.tagName!=='MARK'){
-      kdMarkNode(child, ql);
-    }
+  if(panelId === 'natl' || panelId === 'jp'){
+    activateTabById('national');
+    var seg = document.querySelector('#s-national .seg[data-t="' + panelId + '"]');
+    if(seg) setNatlSeg(seg);
+  } else {
+    activateTabById('players');
+    var chip = document.querySelector('#pChips .chip[data-f="all"]');
+    if(chip) setChip(chip);
+    document.getElementById('pSearch').value = '';
+    applyPlayerSearch('');
   }
+
+  setTimeout(function(){
+    var el = document.getElementById('pc-' + panelId + '-' + secIdx + '-' + rowIdx);
+    if(!el) return;
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    el.classList.add('flash');
+    setTimeout(function(){ el.classList.remove('flash'); }, 1800);
+  }, 80);
 }
 
-function kdUnmark(tr){
-  tr.querySelectorAll('mark.sm').forEach(mk=>{
-    const parent = mk.parentNode;
-    parent.replaceChild(document.createTextNode(mk.textContent), mk);
-    parent.normalize();
+// ============ 데이터 로드 ============
+function kdLoadData(){
+  fetch('data.json').then(function(res){
+    if(!res.ok) throw new Error('data.json HTTP ' + res.status);
+    return res.json();
+  }).then(function(data){
+    window.KD_DATA = data;
+    var panels = {};
+    data.panels.forEach(function(p){ panels[p.id] = p; });
+
+    if(data.meta){
+      if(data.meta.h1) document.getElementById('brandH1').textContent = data.meta.h1;
+      if(data.meta.hsub) document.getElementById('brandSub').textContent = data.meta.hsub;
+    }
+
+    var counts = {};
+    ['elem','mid','hi','univ','real','natl'].forEach(function(id){
+      var sum = 0;
+      if(panels[id]){ panels[id].sections.forEach(function(s){ if(s.type === 'table') sum += s.rows.length; }); }
+      counts[id] = sum;
+    });
+    renderHome(data, panels, counts);
+
+    var pHtml = '';
+    ['elem','mid','hi','univ','real'].forEach(function(id){ if(panels[id]) pHtml += renderPanelGroups(panels[id]); });
+    document.getElementById('playersList').innerHTML = pHtml;
+
+    var aHtml = '';
+    if(panels['rv']) panels['rv'].sections.forEach(function(sec){ aHtml += renderRawSec(sec); });
+    if(panels['pl']) panels['pl'].sections.forEach(function(sec){ aHtml += renderRawSec(sec); });
+    document.getElementById('analysisList').innerHTML = aHtml;
+
+    if(panels['natl']) document.getElementById('natlList').innerHTML = renderPanelGroups(panels['natl']);
+    if(panels['jp']) document.getElementById('jpList').innerHTML = renderPanelGroups(panels['jp']);
+
+    buildSearchIndex(data.players_index || []);
+  }).catch(function(err){
+    document.getElementById('heroLabel').textContent = '⚠️ data.json 로딩 실패: ' + err.message;
   });
 }
+kdLoadData();
 </script>
 </body>
 </html>
