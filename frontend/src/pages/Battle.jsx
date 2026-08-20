@@ -2,282 +2,354 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../hooks/api";
 
+/* ── Design tokens ── */
 const C = {
-  bg: "#0B0E15", surface: "#1D2433", surfaceAlt: "#252E40",
+  bg: "#0B0E15", surface: "#1A2035", surfaceAlt: "#222B40",
   paper: "#ECE4D3", paperDim: "#9B9485", brass: "#C3A35F",
   accent: "#9B3A2C", accentBright: "#E14430", line: "rgba(236,228,211,0.10)",
+  hitFlash: "#FFD700",
+  zoneHead:  "#4FC3F7",
+  zoneWrist: "#81C784",
+  zoneWaist: "#FFB74D",
+  zoneThrust:"#F06292",
 };
 
-const ZONES = [
-  { key: "head", kanji: "面", label: "머리" },
-  { key: "wrist", kanji: "小手", label: "손목" },
-  { key: "waist", kanji: "胴", label: "허리" },
-  { key: "thrust", kanji: "突", label: "찌르기" },
-];
+const ZONE_META = {
+  head:   { kanji: "面",  label: "머리",   color: C.zoneHead,   emoji: "⬆" },
+  wrist:  { kanji: "小手",label: "손목",   color: C.zoneWrist,  emoji: "✋" },
+  waist:  { kanji: "胴",  label: "허리",   color: C.zoneWaist,  emoji: "◀" },
+  thrust: { kanji: "突",  label: "찌름",   color: C.zoneThrust, emoji: "▶" },
+};
 const KAMAE_LABELS = { chudan: "中段", jodan: "上段", gedan: "下段" };
-const DIST_LABELS = { far: "원거리", issoku: "일족일도", tsuba: "코등이" };
-const TIME_LIMIT = 60;
+const DIST_LABELS  = { far: "원거리", issoku: "일족일도", tsuba: "코등이" };
+const TIME_LIMIT   = 60;
 
 /* ── Audio ── */
-const audioCtx = typeof AudioContext !== "undefined" ? new AudioContext() : null;
+let _audioCtx = null;
+function getAudio() {
+  if (!_audioCtx && typeof AudioContext !== "undefined") _audioCtx = new AudioContext();
+  return _audioCtx;
+}
 function playSound(type) {
-  if (!audioCtx) return;
-  if (audioCtx.state === "suspended") audioCtx.resume();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  const t = audioCtx.currentTime;
+  const ctx = getAudio(); if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume();
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  const t = ctx.currentTime;
   if (type === "fumikomi") {
-    osc.type = "square"; osc.frequency.value = 80;
-    gain.gain.setValueAtTime(0.4, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-    osc.start(); osc.stop(t + 0.15);
+    o.type = "square"; o.frequency.value = 80;
+    g.gain.setValueAtTime(0.4, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+    o.start(); o.stop(t + 0.15);
   } else if (type === "hit") {
-    osc.type = "sawtooth"; osc.frequency.value = 200;
-    gain.gain.setValueAtTime(0.5, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-    osc.start(); osc.stop(t + 0.1);
+    o.type = "sawtooth"; o.frequency.value = 220;
+    g.gain.setValueAtTime(0.6, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+    o.start(); o.stop(t + 0.12);
   } else if (type === "kiai") {
-    osc.type = "sawtooth"; osc.frequency.value = 350;
-    gain.gain.setValueAtTime(0.25, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
-    osc.start(); osc.stop(t + 0.25);
+    o.type = "sawtooth"; o.frequency.value = 380;
+    g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.28);
+    o.start(); o.stop(t + 0.28);
   } else if (type === "shinai") {
-    osc.type = "triangle"; osc.frequency.value = 1200;
-    gain.gain.setValueAtTime(0.12, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.04);
-    osc.start(); osc.stop(t + 0.04);
+    o.type = "triangle"; o.frequency.value = 1400;
+    g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.04);
+    o.start(); o.stop(t + 0.04);
   }
 }
 
-/* ══════════════════════════════════════════════
-   Canvas 2D Kendo Fighter Drawing
-   ══════════════════════════════════════════════ */
-function drawFighter(ctx, x, y, { pose = "ready", attackZone = null, hit = false, flip = false, semeShake = 0, scale = 1 }) {
+function drawChibi(ctx, cx, cy, {
+  flip = false, pose = "ready", hitZone = null, activeZone = null,
+  semeShake = 0, isHit = false, kamae = "chudan",
+}) {
   ctx.save();
-  ctx.translate(x + semeShake, y);
-  ctx.scale(scale, scale);
-  if (flip) { ctx.scale(-1, 1); ctx.translate(-120, 0); }
+  ctx.translate(cx + semeShake, cy);
+  if (flip) ctx.scale(-1, 1);
 
-  let bx = 0, by = 0;
-  if (pose === "attack") { bx = 15; by = -5; }
-  if (pose === "hit") { bx = -10; by = 3; }
+  const flash = (zone) => hitZone === zone ? C.hitFlash : activeZone === zone ? ZONE_META[zone].color : null;
+
+  let bx = 0, by = 0, shinaiAngle = -0.15;
+  if (pose === "attack") {
+    bx = flip ? -18 : 18; by = -6;
+    if (hitZone === "head")   shinaiAngle = -0.35;
+    else if (hitZone === "wrist") shinaiAngle = 0.5;
+    else if (hitZone === "waist") shinaiAngle = 0.85;
+    else if (hitZone === "thrust") shinaiAngle = 0.0;
+    else shinaiAngle = -0.3;
+  }
+  if (kamae === "jodan") shinaiAngle = -0.7;
+  if (kamae === "gedan") shinaiAngle = 0.6;
   ctx.translate(bx, by);
 
-  if (hit) { ctx.globalAlpha = 0.7; }
+  if (isHit) { ctx.globalAlpha = 0.75; }
 
-  // Feet shadows
-  ctx.fillStyle = "#0a0a1a";
-  ctx.beginPath(); ctx.ellipse(42, 275, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(62, 278, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
+  const W  = 60;
+  const CX = 0;
 
-  // Hakama (wide pleated skirt)
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.beginPath(); ctx.ellipse(CX, 120, 28, 7, 0, 0, Math.PI * 2); ctx.fill();
+
   ctx.fillStyle = "#0d1b3a";
   ctx.beginPath();
-  ctx.moveTo(25, 148); ctx.lineTo(18, 272); ctx.quadraticCurveTo(42, 282, 52, 278);
-  ctx.quadraticCurveTo(62, 282, 85, 272); ctx.lineTo(78, 148); ctx.closePath();
-  ctx.fill();
-  // Pleat lines
-  ctx.strokeStyle = "rgba(8,20,40,0.3)"; ctx.lineWidth = 1;
-  for (const px of [33, 42, 52, 62, 71]) {
-    ctx.beginPath(); ctx.moveTo(px, 150); ctx.lineTo(px + (px < 52 ? -2 : 2), 275); ctx.stroke();
-  }
+  ctx.moveTo(CX - W/2 + 4, 40);
+  ctx.lineTo(CX - W/2 - 4, 115);
+  ctx.quadraticCurveTo(CX, 122, CX + W/2 + 4, 115);
+  ctx.lineTo(CX + W/2 - 4, 40);
+  ctx.closePath(); ctx.fill();
 
-  // Tare (waist protector)
-  for (let i = 0; i < 5; i++) {
-    const tw = i === 2 ? 13 : 10;
-    ctx.fillStyle = "#1a1535";
+  ctx.strokeStyle = "rgba(8,20,55,0.5)"; ctx.lineWidth = 1;
+  for (const px of [-18, -9, 0, 9, 18]) {
     ctx.beginPath();
-    ctx.roundRect(26 + i * 10, 145, tw, 22, 2);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(42,32,80,0.5)"; ctx.lineWidth = 0.5;
+    ctx.moveTo(CX + px, 42); ctx.lineTo(CX + px + (px < 0 ? -1 : 1), 112);
     ctx.stroke();
   }
 
-  // Keikogi (jacket)
-  ctx.fillStyle = "#0d1b3a";
-  ctx.beginPath();
-  ctx.moveTo(30, 80); ctx.lineTo(26, 148); ctx.lineTo(78, 148); ctx.lineTo(74, 80);
-  ctx.closePath(); ctx.fill();
-  // Left sleeve
-  ctx.beginPath();
-  ctx.moveTo(30, 84); ctx.lineTo(12, 102); ctx.lineTo(16, 115); ctx.lineTo(32, 105);
-  ctx.closePath(); ctx.fill();
-  // Right sleeve
-  ctx.beginPath();
-  ctx.moveTo(74, 84); ctx.lineTo(92, 102); ctx.lineTo(88, 115); ctx.lineTo(72, 105);
-  ctx.closePath(); ctx.fill();
+  const tareFill = flash("waist") || "#1e1840";
+  for (let i = 0; i < 5; i++) {
+    const tx2 = CX - 24 + i * 10;
+    const tw = i === 2 ? 12 : 9;
+    ctx.fillStyle = tareFill;
+    ctx.beginPath(); ctx.roundRect(tx2, 38, tw, 18, 2); ctx.fill();
+    ctx.strokeStyle = flash("waist") ? "rgba(255,215,0,0.6)" : "rgba(50,40,90,0.4)";
+    ctx.lineWidth = 0.8; ctx.stroke();
+  }
+  if (flash("waist")) {
+    ctx.shadowColor = flash("waist"); ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.roundRect(CX - 26, 36, 54, 22, 3);
+    ctx.strokeStyle = flash("waist"); ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
 
-  // Do (chest armor)
-  ctx.strokeStyle = "rgba(58,42,90,0.8)"; ctx.lineWidth = 1;
-  ctx.fillStyle = "#1a1535";
+  const doFill = flash("waist") || "#1a1535";
+  ctx.fillStyle = doFill;
+  ctx.strokeStyle = flash("waist") ? "rgba(255,215,0,0.5)" : "rgba(58,42,90,0.7)";
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(30, 82); ctx.quadraticCurveTo(28, 95, 30, 140);
-  ctx.lineTo(74, 140); ctx.quadraticCurveTo(76, 95, 74, 82);
-  ctx.quadraticCurveTo(52, 75, 30, 82);
+  ctx.moveTo(CX - W/2 + 2, -22);
+  ctx.quadraticCurveTo(CX - W/2, -2, CX - W/2 + 2, 42);
+  ctx.lineTo(CX + W/2 - 2, 42);
+  ctx.quadraticCurveTo(CX + W/2, -2, CX + W/2 - 2, -22);
+  ctx.quadraticCurveTo(CX, -28, CX - W/2 + 2, -22);
   ctx.fill(); ctx.stroke();
-  // Lacquer panel
-  ctx.fillStyle = "rgba(122,34,0,0.8)";
+
+  ctx.fillStyle = "rgba(100,25,0,0.85)";
   ctx.beginPath();
-  ctx.moveTo(34, 100); ctx.quadraticCurveTo(32, 115, 34, 135);
-  ctx.lineTo(70, 135); ctx.quadraticCurveTo(72, 115, 70, 100);
-  ctx.quadraticCurveTo(52, 95, 34, 100);
+  ctx.moveTo(CX - 22, -10);
+  ctx.quadraticCurveTo(CX - 23, 8, CX - 20, 36);
+  ctx.lineTo(CX + 20, 36);
+  ctx.quadraticCurveTo(CX + 23, 8, CX + 22, -10);
+  ctx.quadraticCurveTo(CX, -15, CX - 22, -10);
   ctx.fill();
 
-  // Neck
-  ctx.fillStyle = "#d4a574";
-  ctx.fillRect(46, 55, 12, 12);
-
-  // Men (head armor)
-  ctx.fillStyle = "#0d1535";
+  ctx.fillStyle = "#0d1b3a";
   ctx.beginPath();
-  ctx.arc(52, 40, 22, 0, Math.PI * 2); ctx.fill();
-  // Men-gane (face grille)
-  ctx.strokeStyle = "#3a3a5a"; ctx.lineWidth = 1.5;
-  for (let gy = 30; gy < 50; gy += 4) {
-    ctx.beginPath(); ctx.moveTo(36, gy); ctx.lineTo(68, gy); ctx.stroke();
+  ctx.moveTo(CX - W/2 + 2, -20);
+  ctx.lineTo(CX - W/2 - 12, 5);
+  ctx.lineTo(CX - W/2 - 6, 18);
+  ctx.lineTo(CX - W/2 + 8, 0);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(CX + W/2 - 2, -20);
+  ctx.lineTo(CX + W/2 + 12, 5);
+  ctx.lineTo(CX + W/2 + 6, 18);
+  ctx.lineTo(CX + W/2 - 8, 0);
+  ctx.closePath(); ctx.fill();
+
+  const koteFill = flash("wrist") || "#1a1535";
+  ctx.fillStyle = koteFill;
+  ctx.beginPath(); ctx.ellipse(CX - W/2 - 8, 12, 9, 7, -0.4, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(CX + W/2 + 8, 12, 9, 7, 0.4, 0, Math.PI * 2); ctx.fill();
+  if (flash("wrist")) {
+    ctx.shadowColor = flash("wrist"); ctx.shadowBlur = 12;
+    ctx.strokeStyle = flash("wrist"); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(CX - W/2 - 8, 12, 11, 9, -0.4, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(CX + W/2 + 8, 12, 11, 9, 0.4, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
   }
-  // Tsuki-dare (throat protector)
-  ctx.fillStyle = "#1a1535";
-  ctx.fillRect(38, 50, 28, 10);
 
-  // Kote (gloves)
-  ctx.fillStyle = "#1a1535";
-  ctx.beginPath(); ctx.ellipse(14, 112, 8, 6, -0.3, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(90, 112, 8, 6, 0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#d4a574";
+  ctx.beginPath(); ctx.roundRect(CX - 7, -36, 14, 16, 3); ctx.fill();
 
-  // Shinai (bamboo sword)
-  const shinaiLen = 85;
-  let rad;
-  if (pose === "attack") {
-    if (attackZone === "head") rad = -0.3;
-    else if (attackZone === "wrist") rad = 0.4;
-    else if (attackZone === "waist") rad = 0.8;
-    else if (attackZone === "thrust") rad = -0.1;
-    else rad = -0.3;
-  } else { rad = -0.15; }
-  const pivotX = 85, pivotY = 108;
-  // Blade
-  ctx.strokeStyle = "#c4a45a"; ctx.lineWidth = 3;
-  const tipX = pivotX + Math.sin(rad) * shinaiLen;
-  const tipY = pivotY - Math.cos(rad) * shinaiLen;
-  ctx.beginPath(); ctx.moveTo(pivotX, pivotY); ctx.lineTo(tipX, tipY); ctx.stroke();
-  // Tsuba (guard)
+  const menFill = flash("head") || "#0d1535";
+  ctx.fillStyle = menFill;
+  ctx.beginPath();
+  ctx.arc(CX, -62, 30, 0, Math.PI * 2); ctx.fill();
+  if (flash("head")) {
+    ctx.shadowColor = flash("head"); ctx.shadowBlur = 14;
+    ctx.strokeStyle = flash("head"); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(CX, -62, 32, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+  ctx.strokeStyle = "#3a3a6a"; ctx.lineWidth = 1.5;
+  for (let gy = -72; gy < -42; gy += 5) {
+    ctx.beginPath(); ctx.moveTo(CX - 20, gy); ctx.lineTo(CX + 20, gy); ctx.stroke();
+  }
+  ctx.fillStyle = menFill;
+  ctx.beginPath(); ctx.roundRect(CX - 18, -40, 36, 10, 3); ctx.fill();
+  ctx.strokeStyle = "rgba(150,140,200,0.3)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(CX - 8, -78, 12, Math.PI * 1.1, Math.PI * 1.8); ctx.stroke();
+
+  ctx.fillStyle = "#fff";
+  ctx.beginPath(); ctx.ellipse(CX - 9, -64, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(CX + 9, -64, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#1a1a3a";
+  ctx.beginPath(); ctx.ellipse(CX - 9, -63, 3, 4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(CX + 9, -63, 3, 4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.beginPath(); ctx.ellipse(CX - 8, -65, 1.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(CX + 10, -65, 1.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+
+  const thrustGlow = flash("thrust");
+  const shinaiLen = 100;
+  const pivotX = CX + 14, pivotY = 5;
+  const ex = pivotX + Math.sin(shinaiAngle) * shinaiLen;
+  const ey = pivotY - Math.cos(shinaiAngle) * shinaiLen;
+
+  if (thrustGlow) { ctx.shadowColor = thrustGlow; ctx.shadowBlur = 14; }
+  const grad = ctx.createLinearGradient(pivotX, pivotY, ex, ey);
+  grad.addColorStop(0, "#8b6914"); grad.addColorStop(1, "#e8d5a0");
+  ctx.strokeStyle = grad; ctx.lineWidth = 3.5;
+  ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(pivotX, pivotY); ctx.lineTo(ex, ey); ctx.stroke();
+  ctx.lineCap = "butt";
   ctx.fillStyle = "#6b4e1b";
-  const tsubaX = pivotX + Math.sin(rad) * 8;
-  const tsubaY2 = pivotY - Math.cos(rad) * 8;
-  ctx.beginPath(); ctx.ellipse(tsubaX, tsubaY2, 5, 5, 0, 0, Math.PI * 2); ctx.fill();
-  // Tip
-  ctx.fillStyle = "#f5f0e0";
-  const sakiX = pivotX + Math.sin(rad) * (shinaiLen - 4);
-  const sakiY = pivotY - Math.cos(rad) * (shinaiLen - 4);
-  ctx.beginPath(); ctx.ellipse(sakiX, sakiY, 3, 4, 0, 0, Math.PI * 2); ctx.fill();
+  const tsubaX = pivotX + Math.sin(shinaiAngle) * 8;
+  const tsubaY = pivotY - Math.cos(shinaiAngle) * 8;
+  ctx.beginPath(); ctx.ellipse(tsubaX, tsubaY, 6, 5, shinaiAngle, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = thrustGlow || "#f5f0e0";
+  const sakiX = pivotX + Math.sin(shinaiAngle) * (shinaiLen - 3);
+  const sakiY = pivotY - Math.cos(shinaiAngle) * (shinaiLen - 3);
+  ctx.beginPath(); ctx.ellipse(sakiX, sakiY, 3.5, 4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = 0;
 
   ctx.restore();
 }
 
 function drawReferee(ctx, x, y, scale, flagUp) {
-  ctx.save();
-  ctx.translate(x, y);
+  ctx.save(); ctx.translate(x, y);
   const s = scale;
-  // Head
   ctx.fillStyle = "#d4a574";
-  ctx.beginPath(); ctx.arc(0, -15 * s, 5 * s, 0, Math.PI * 2); ctx.fill();
-  // Body (white shirt)
+  ctx.beginPath(); ctx.arc(0, -14 * s, 5 * s, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "#f0f0f0";
-  ctx.fillRect(-7 * s, -10 * s, 14 * s, 20 * s);
-  // Tie
+  ctx.fillRect(-6 * s, -9 * s, 12 * s, 18 * s);
   ctx.fillStyle = "#8b1a1a";
-  ctx.fillRect(-1, -10 * s, 2, 12 * s);
-  // Pants
+  ctx.fillRect(-1, -9 * s, 2, 10 * s);
   ctx.fillStyle = "#2a2a2a";
-  ctx.fillRect(-7 * s, 10 * s, 14 * s, 14 * s);
-  // Red flag (left)
-  ctx.strokeStyle = "#8b6914"; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(-10, -5); ctx.lineTo(-10, flagUp ? -30 : -12); ctx.stroke();
-  ctx.fillStyle = flagUp ? "#E53935" : "rgba(68,34,34,0.3)";
-  ctx.fillRect(-18, flagUp ? -38 : -18, 10, 7);
-  // White flag (right)
-  ctx.beginPath(); ctx.moveTo(10, -5); ctx.lineTo(10, flagUp ? -30 : -12); ctx.stroke();
-  ctx.fillStyle = flagUp ? "#f0f0f0" : "rgba(68,68,68,0.3)";
-  ctx.fillRect(8, flagUp ? -38 : -18, 10, 7);
+  ctx.fillRect(-6 * s, 9 * s, 12 * s, 12 * s);
+  const up = !!flagUp;
+  ctx.strokeStyle = "#7a5a10"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-8, -4); ctx.lineTo(-8, up ? -28 : -12); ctx.stroke();
+  ctx.fillStyle = up ? "#E53935" : "rgba(68,34,34,0.25)";
+  ctx.fillRect(-15, up ? -36 : -18, 9, 7);
+  ctx.beginPath(); ctx.moveTo(8, -4); ctx.lineTo(8, up ? -28 : -12); ctx.stroke();
+  ctx.fillStyle = up ? "#eeeeee" : "rgba(68,68,68,0.25)";
+  ctx.fillRect(7, up ? -36 : -18, 9, 7);
   ctx.restore();
 }
 
-function drawScene(canvas, sceneState) {
+function renderScene(canvas, state) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  // Wooden floor
-  ctx.fillStyle = "#D4B88C";
-  ctx.fillRect(0, 0, W, H);
-  // Wood grain
-  ctx.strokeStyle = "rgba(139,107,66,0.18)"; ctx.lineWidth = 1;
-  for (let i = 1; i <= 15; i++) {
-    ctx.beginPath(); ctx.moveTo(i * 25, 0); ctx.lineTo(i * 25, H); ctx.stroke();
+  const floorGrad = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  floorGrad.addColorStop(0, "#C8A870");
+  floorGrad.addColorStop(1, "#A07840");
+  ctx.fillStyle = floorGrad;
+  ctx.fillRect(0, H * 0.55, W, H * 0.45);
+
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H * 0.6);
+  bgGrad.addColorStop(0, "#0B0E1A");
+  bgGrad.addColorStop(1, "#141826");
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H * 0.57);
+
+  ctx.strokeStyle = "rgba(100,70,30,0.15)"; ctx.lineWidth = 1;
+  for (let i = 0; i < 30; i++) {
+    ctx.beginPath(); ctx.moveTo(i * 28, H * 0.55); ctx.lineTo(i * 28, H); ctx.stroke();
   }
-  // Green boundary
+
+  ctx.strokeStyle = "#2E7D32"; ctx.lineWidth = 3;
+  ctx.strokeRect(20, 20, W - 40, H - 40);
+  ctx.strokeStyle = "rgba(46,125,50,0.3)"; ctx.lineWidth = 1.5;
+  ctx.strokeRect(24, 24, W - 48, H - 48);
+
+  ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(W / 2, 20); ctx.lineTo(W / 2, H - 20); ctx.stroke();
+
   ctx.strokeStyle = "#2E7D32"; ctx.lineWidth = 2.5;
-  ctx.strokeRect(16, 16, W - 32, H - 32);
-  // Center circle
-  ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.ellipse(W / 2, H / 2, 50, 30, 0, 0, Math.PI * 2); ctx.stroke();
-  // Cross marks
-  ctx.strokeStyle = "#2E7D32"; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(140, H / 2); ctx.lineTo(162, H / 2); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(238, H / 2); ctx.lineTo(260, H / 2); ctx.stroke();
+  const markOffsets = [W / 2 - 70, W / 2 + 70];
+  for (const mx of markOffsets) {
+    ctx.beginPath(); ctx.moveTo(mx - 12, H * 0.7); ctx.lineTo(mx + 12, H * 0.7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(mx, H * 0.7 - 10); ctx.lineTo(mx, H * 0.7 + 10); ctx.stroke();
+  }
 
-  const { distance, playerPose, opponentPose, playerHit, opponentHit,
-          attackZone, opponentZone, flags, semeShake } = sceneState;
+  const {
+    distance, playerPose, opponentPose, playerHit, opponentHit,
+    hitZone, opponentZone, flags, semeShake, playerKamae, opponentKamae,
+    opening, activeZone,
+  } = state;
 
-  // Distance → position
-  const gap = distance === "far" ? 80 : distance === "issoku" ? 30 : 0;
-  const playerX = W / 2 - 60 - gap / 2;
-  const opponentX = W / 2 + gap / 2 - 60;
-  const fighterY = 30;
-
-  // Draw player
-  drawFighter(ctx, playerX, fighterY, {
-    pose: playerPose, attackZone, hit: playerHit, flip: false, semeShake,
-  });
-  // Draw opponent
-  drawFighter(ctx, opponentX, fighterY, {
-    pose: opponentPose, attackZone: opponentZone, hit: opponentHit, flip: true, semeShake: -semeShake * 0.6,
-  });
-
-  // Referees
-  const refPositions = [
-    { x: 22, y: 140 },
-    { x: W - 22, y: 140 },
-    { x: W / 2, y: H - 25 },
+  const refData = [
+    { x: 42, y: H - 42, scale: 0.85 },
+    { x: W - 42, y: H - 42, scale: 0.85 },
+    { x: W / 2, y: H - 30, scale: 1.0 },
   ];
-  refPositions.forEach((rp, i) => {
-    const sc = i === 2 ? 1.1 : 0.85;
-    const flagUp = flags && flags[i];
-    drawReferee(ctx, rp.x, rp.y, sc, flagUp);
+  refData.forEach((r, i) => {
+    drawReferee(ctx, r.x, r.y, r.scale, flags && flags[i]);
   });
+
+  const gap = distance === "far" ? 200 : distance === "issoku" ? 100 : 60;
+  const playerX = W / 2 - gap / 2;
+  const opponentX = W / 2 + gap / 2;
+  const fighterY = H * 0.62;
+
+  drawChibi(ctx, opponentX, fighterY, {
+    flip: true, pose: opponentPose,
+    hitZone: opponentHit ? opponentZone : null,
+    activeZone: null,
+    semeShake: -semeShake * 0.6,
+    isHit: opponentHit, kamae: opponentKamae,
+  });
+
+  drawChibi(ctx, playerX, fighterY, {
+    flip: false, pose: playerPose,
+    hitZone: playerHit ? hitZone : null,
+    activeZone: activeZone,
+    semeShake, isHit: playerHit, kamae: playerKamae,
+  });
+
+  if (opening) {
+    const zc = ZONE_META[opening];
+    const ox = opponentX - 20;
+    const oy = fighterY + (opening === "head" ? -95 : opening === "wrist" ? -5 : opening === "waist" ? 20 : -50);
+    ctx.save();
+    ctx.font = "bold 11px sans-serif";
+    ctx.fillStyle = zc.color;
+    ctx.shadowColor = zc.color; ctx.shadowBlur = 10;
+    ctx.fillText("빈틈!", ox - 18, oy);
+    ctx.fillText(zc.kanji, ox, oy + 14);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
 }
 
-/* ══════════════════════════════════════════════
-   Canvas Scene Hook
-   ══════════════════════════════════════════════ */
-function useCanvasScene(canvasRef, sceneState) {
+function useScene(canvasRef, sceneState) {
   useEffect(() => {
-    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
-    canvas.width = 400;
-    canvas.height = 320;
-    drawScene(canvas, sceneState);
-  }, [canvasRef, sceneState]);
+    if (!canvas) return;
+    renderScene(canvas, sceneState);
+  });
 }
 
 export default function Battle() {
   const { studentId } = useParams();
   const canvasRef = useRef(null);
+
   const [phase, setPhase] = useState("ready");
-  const [state, setState] = useState({
+  const [gameState, setGameState] = useState({
     distance: "far", player_kamae: "chudan", opponent_kamae: "chudan",
     score: { player: 0, opponent: 0 }, hansoku: { player: 0, opponent: 0 },
-    seme_pressure: 0.5, opening_zone: null, finished: false, result: null, turn: 0,
+    seme_pressure: 0.5, opening_zone: null, finished: false, result: null,
   });
   const [lastResult, setLastResult] = useState(null);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
@@ -285,8 +357,8 @@ export default function Battle() {
   const [opponentPose, setOpponentPose] = useState("ready");
   const [playerHit, setPlayerHit] = useState(false);
   const [opponentHit, setOpponentHit] = useState(false);
-  const [attackZone, setAttackZone] = useState(null);
-  const [shake, setShake] = useState(false);
+  const [hitZone, setHitZone] = useState(null);
+  const [activeZone, setActiveZone] = useState(null);
   const [flags, setFlags] = useState(null);
   const [eventLog, setEventLog] = useState([]);
   const [countdown, setCountdown] = useState(0);
@@ -294,31 +366,41 @@ export default function Battle() {
   const [kiaiTimer, setKiaiTimer] = useState(0);
   const [semeHolding, setSemeHolding] = useState(false);
   const [semeShake, setSemeShake] = useState(0);
+  const [shake, setShake] = useState(false);
+
   const timerRef = useRef(null);
   const logRef = useRef(null);
   const semeIntervalRef = useRef(null);
   const semeTickRef = useRef(0);
   const kiaiTimeoutRef = useRef(null);
 
-  // Canvas scene
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = 750;
+    canvas.height = 320;
+  }, []);
+
   const sceneState = {
-    distance: state.distance, playerPose, opponentPose,
-    playerHit, opponentHit, attackZone,
-    opponentZone: lastResult?.opponent_zone,
-    flags, semeShake,
+    distance: gameState.distance,
+    playerPose, opponentPose, playerHit, opponentHit,
+    hitZone, opponentZone: lastResult?.opponent_zone,
+    flags, semeShake, opening: gameState.opening_zone,
+    playerKamae: gameState.player_kamae,
+    opponentKamae: gameState.opponent_kamae,
+    activeZone,
   };
-  useCanvasScene(canvasRef, sceneState);
+  useScene(canvasRef, sceneState);
 
   const startBattle = useCallback(async () => {
     setPhase("countdown"); setCountdown(3);
     const info = await api.battleStart({ student_id: Number(studentId), opponent_type: "ai" });
-    setState(s => ({ ...s, ...info, score: info.score || { player: 0, opponent: 0 } }));
+    setGameState(s => ({ ...s, ...info, score: info.score || { player: 0, opponent: 0 } }));
     setTimeLeft(TIME_LIMIT); setLastResult(null); setEventLog([]);
     setPlayerPose("ready"); setOpponentPose("ready");
-    setFlags(null); setKiai(false); setKiaiTimer(0);
+    setFlags(null); setKiai(false); setKiaiTimer(0); setHitZone(null);
   }, [studentId]);
 
-  // Countdown
   useEffect(() => {
     if (phase !== "countdown") return;
     if (countdown <= 0) { setPhase("fight"); return; }
@@ -326,7 +408,6 @@ export default function Battle() {
     return () => clearTimeout(t);
   }, [phase, countdown]);
 
-  // Timer
   useEffect(() => {
     if (phase !== "fight") return;
     timerRef.current = setInterval(() => {
@@ -334,7 +415,7 @@ export default function Battle() {
         if (t <= 1) {
           clearInterval(timerRef.current);
           api.battleTimeout(Number(studentId)).then(res => {
-            setState(s => ({ ...s, ...res }));
+            setGameState(s => ({ ...s, ...res }));
             setPhase("result");
           });
           return 0;
@@ -345,26 +426,22 @@ export default function Battle() {
     return () => clearInterval(timerRef.current);
   }, [phase, studentId]);
 
-  // Auto-scroll log
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [eventLog]);
 
-  // ── 세메 홀드 시스템 ──
   function startSemeHold() {
-    if (phase !== "fight" || state.distance === "far") return;
-    setSemeHolding(true);
-    semeTickRef.current = 0;
-    playSound("shinai");
+    if (phase !== "fight" || gameState.distance === "far") return;
+    setSemeHolding(true); semeTickRef.current = 0; playSound("shinai");
     semeIntervalRef.current = setInterval(() => {
-      setSemeShake(Math.random() * 5 - 2.5);
+      setSemeShake(Math.random() * 6 - 3);
       semeTickRef.current += 1;
       if (semeTickRef.current % 3 === 0) playSound("shinai");
       if (semeTickRef.current % 5 === 0) {
         api.battleAction(Number(studentId), { action: "seme", kiai: false }).then(res => {
-          setState(s => ({ ...s, ...res }));
-          if (res.player_event) setEventLog(p => [...p.slice(-20), { side: "player", text: res.player_event }]);
-          if (res.opponent_event) setEventLog(p => [...p.slice(-20), { side: "opponent", text: res.opponent_event }]);
+          setGameState(s => ({ ...s, ...res }));
+          if (res.player_event) setEventLog(p => [...p.slice(-30), { side: "player", text: res.player_event }]);
+          if (res.opponent_event) setEventLog(p => [...p.slice(-30), { side: "opponent", text: res.opponent_event }]);
         }).catch(() => {});
       }
     }, 60);
@@ -375,7 +452,6 @@ export default function Battle() {
   }
   useEffect(() => () => clearInterval(semeIntervalRef.current), []);
 
-  // ── 기합 휘발성 타이머 (1.5초) ──
   function activateKiai() {
     if (kiai) return;
     setKiai(true); setKiaiTimer(1.5); playSound("kiai");
@@ -391,30 +467,29 @@ export default function Battle() {
   }
   useEffect(() => () => clearTimeout(kiaiTimeoutRef.current), []);
 
-  // ── Action handler ──
   async function doAction(action, zone = null, kamae = null) {
     if (phase !== "fight") return;
     const res = await api.battleAction(Number(studentId), {
       action, zone, kiai, kamae_change: kamae,
     });
-    setState(s => ({ ...s, ...res }));
+    setGameState(s => ({ ...s, ...res }));
     setLastResult(res);
 
-    if (res.player_event) setEventLog(p => [...p.slice(-20), { side: "player", text: res.player_event }]);
-    if (res.opponent_event) setEventLog(p => [...p.slice(-20), { side: "opponent", text: res.opponent_event }]);
+    if (res.player_event) setEventLog(p => [...p.slice(-30), { side: "player", text: res.player_event }]);
+    if (res.opponent_event) setEventLog(p => [...p.slice(-30), { side: "opponent", text: res.opponent_event }]);
 
-    if (action === "strike") {
+    if (action === "strike" && zone) {
       playSound("fumikomi");
-      setAttackZone(zone);
+      setHitZone(zone);
       setPlayerPose("attack");
-      setTimeout(() => setPlayerPose("ready"), 450);
+      setTimeout(() => { setPlayerPose("ready"); setHitZone(null); }, 480);
 
       if (res.player_ippon?.ippon) {
         playSound("hit");
         setOpponentHit(true); setShake(true);
         setFlags(res.flags_player);
-        setTimeout(() => { setOpponentHit(false); setShake(false); }, 400);
-        setTimeout(() => setFlags(null), 2500);
+        setTimeout(() => { setOpponentHit(false); setShake(false); }, 420);
+        setTimeout(() => setFlags(null), 2800);
       }
     }
 
@@ -425,222 +500,349 @@ export default function Battle() {
           playSound("hit");
           setPlayerHit(true); setShake(true);
           setFlags(res.flags_opponent);
-          setTimeout(() => { setPlayerHit(false); setShake(false); }, 400);
-          setTimeout(() => setFlags(null), 2500);
+          setTimeout(() => { setPlayerHit(false); setShake(false); }, 420);
+          setTimeout(() => setFlags(null), 2800);
         }
-        setTimeout(() => setOpponentPose("ready"), 450);
+        setTimeout(() => setOpponentPose("ready"), 480);
       }, 300);
     }
 
     if (res.finished) {
       clearInterval(timerRef.current);
-      setTimeout(() => setPhase("result"), 1500);
+      setTimeout(() => setPhase("result"), 1600);
       await api.battleFinish(Number(studentId)).catch(() => {});
     }
     if (kiai) { setKiai(false); setKiaiTimer(0); clearTimeout(kiaiTimeoutRef.current); }
   }
 
-  const dist = state.distance;
-  const opening = state.opening_zone;
+  const dist = gameState.distance;
+  const opening = gameState.opening_zone;
   const canStrike = dist === "issoku" || dist === "tsuba";
 
-  /* ── Countdown overlay ── */
-  if (phase === "countdown") {
-    const labels = ["始め!", "構え!", "礼!"];
-    return (
-      <div style={{ padding: "12px 0", textAlign: "center" }}>
-        <div style={{ position: "relative", borderRadius: 14, overflow: "hidden" }}>
-          <canvas ref={canvasRef} style={{ width: "100%", height: "auto", borderRadius: 14 }} />
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,.4)" }}>
-            <p key={countdown} style={{ fontFamily: "serif", fontSize: 52, fontWeight: 900, color: countdown === 0 ? C.brass : "#fff", textShadow: `0 0 40px ${countdown === 0 ? C.brass : "rgba(255,255,255,.4)"}`, animation: "hitPop .6s ease-out" }}>
-              {countdown > 0 ? labels[countdown - 1] : "始め!"}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const wrapStyle = {
+    display: "flex", flexDirection: "column", gap: 8,
+    transform: shake ? `translate(${Math.random() > 0.5 ? 5 : -5}px,2px)` : "none",
+    transition: "transform .05s",
+  };
 
-  /* ── Ready ── */
-  if (phase === "ready") {
-    return (
-      <div style={{ padding: "12px 0", animation: "fadeIn .3s ease" }}>
-        <div style={{ textAlign: "center", marginBottom: 16 }}>
-          <p style={{ fontFamily: "serif", fontSize: 30, fontWeight: 900, color: C.brass }}>対決</p>
-          <p style={{ fontSize: 12, color: C.paperDim, marginTop: 4 }}>기검체일치 — 검도 시합 시뮬레이터</p>
+  const canvasBlock = (
+    <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", background: C.bg }}>
+      <canvas ref={canvasRef} style={{ width: "100%", display: "block", borderRadius: 14 }} />
+      {opening && (
+        <div style={{
+          position: "absolute", top: "8%", right: "8%",
+          background: "rgba(0,0,0,0.7)",
+          border: `1.5px solid ${ZONE_META[opening].color}`,
+          borderRadius: 8, padding: "4px 10px",
+          color: ZONE_META[opening].color, fontSize: 13, fontWeight: 800,
+          animation: "pulse .4s ease-in-out infinite",
+          textShadow: `0 0 8px ${ZONE_META[opening].color}`,
+        }}>
+          {ZONE_META[opening].kanji} 빈틈!
         </div>
-        <div style={{ borderRadius: 14, overflow: "hidden" }}>
-          <canvas ref={canvasRef} style={{ width: "100%", height: "auto", borderRadius: 14 }} />
-        </div>
-        <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: C.surface, border: `1px solid ${C.line}` }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: C.paper, marginBottom: 8 }}>시합 규칙</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: 12, color: C.paperDim }}>
-            <span>• 삼본승부 (3심제) — 2본 선취 승리</span>
-            <span>• 세메(꾹 누르기)로 상대 빈틈을 만들어라</span>
-            <span>• 기합 → 1.5초 내 타격해야 유효!</span>
-            <span>• 심판 2명 이상 깃발 → 한판 인정</span>
-          </div>
-        </div>
-        <button onClick={startBattle} style={{ width: "100%", padding: "16px 0", marginTop: 14, borderRadius: 12, fontSize: 15, fontWeight: 700, background: `linear-gradient(135deg,${C.accent} 0%,#7A2E22 100%)`, color: C.paper, border: "none", cursor: "pointer", boxShadow: `0 4px 20px rgba(155,58,44,.4)` }}>
-          시합 시작
-        </button>
-      </div>
-    );
-  }
-
-  /* ── Result ── */
-  if (phase === "result") {
-    const won = state.result === "win";
-    const lost = state.result === "lose";
-    return (
-      <div style={{ padding: "12px 0", animation: "fadeIn .3s ease" }}>
-        <div style={{ textAlign: "center", padding: "24px 0", marginBottom: 12, borderRadius: 16, background: won ? "rgba(195,163,95,.08)" : lost ? "rgba(225,68,48,.06)" : "rgba(155,148,133,.06)" }}>
-          <p style={{ fontFamily: "serif", fontSize: 52, fontWeight: 900, color: won ? C.brass : lost ? C.accentBright : C.paperDim }}>{won ? "勝利" : lost ? "敗北" : "引分"}</p>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginTop: 8 }}>
-            <div><p style={{ fontSize: 10, color: C.paperDim }}>나</p><p style={{ fontFamily: "serif", fontSize: 28, fontWeight: 700, color: C.paper }}>{state.score.player}</p></div>
-            <span style={{ fontSize: 18, color: C.paperDim }}>—</span>
-            <div><p style={{ fontSize: 10, color: C.paperDim }}>상대</p><p style={{ fontFamily: "serif", fontSize: 28, fontWeight: 700, color: C.paper }}>{state.score.opponent}</p></div>
-          </div>
-        </div>
-        <div style={{ borderRadius: 14, overflow: "hidden" }}>
-          <canvas ref={canvasRef} style={{ width: "100%", height: "auto", borderRadius: 14 }} />
-        </div>
-        {eventLog.length > 0 && (
-          <div style={{ marginTop: 12, padding: 12, borderRadius: 12, background: C.surface, border: `1px solid ${C.line}`, maxHeight: 140, overflow: "auto" }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: C.paper, marginBottom: 6 }}>시합 기록</p>
-            {eventLog.map((e, i) => (
-              <p key={i} style={{ fontSize: 11, color: e.side === "player" ? C.paper : C.accentBright, padding: "2px 0", borderBottom: `1px solid ${C.line}` }}>
-                {e.side === "player" ? "▸ " : "◂ "}{e.text}
-              </p>
-            ))}
-          </div>
-        )}
-        <button onClick={() => setPhase("ready")} style={{ width: "100%", padding: "16px 0", marginTop: 14, borderRadius: 12, fontSize: 15, fontWeight: 700, background: C.accent, color: C.paper, border: "none", cursor: "pointer" }}>다시 시합</button>
-      </div>
-    );
-  }
-
-  /* ── Fight ── */
-  return (
-    <div style={{ transform: shake ? `translate(${Math.random() > 0.5 ? 4 : -4}px,${Math.random() > 0.5 ? 2 : -2}px)` : "none", transition: "transform .05s" }}>
-      {/* HUD */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", marginBottom: 2 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <span style={{ fontSize: 10, color: C.paperDim }}>나</span>
-          {[0, 1].map(i => <div key={i} style={{ width: 16, height: 16, borderRadius: "50%", background: i < state.score.player ? C.accent : "transparent", border: `2px solid ${i < state.score.player ? C.accent : C.line}`, boxShadow: i < state.score.player ? `0 0 6px ${C.accent}` : "none" }} />)}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 9, color: C.brass, fontWeight: 700 }}>{DIST_LABELS[dist]}</span>
-          <div style={{ width: 42, height: 42, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: `2.5px solid ${timeLeft <= 10 ? C.accentBright : C.brass}`, color: timeLeft <= 10 ? C.accentBright : C.brass, fontFamily: "monospace", fontSize: 17, fontWeight: 800 }}>{timeLeft}</div>
-          <span style={{ fontSize: 9, color: C.paperDim }}>{KAMAE_LABELS[state.opponent_kamae]}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          {[0, 1].map(i => <div key={i} style={{ width: 16, height: 16, borderRadius: "50%", background: i < state.score.opponent ? C.accentBright : "transparent", border: `2px solid ${i < state.score.opponent ? C.accentBright : C.line}`, boxShadow: i < state.score.opponent ? `0 0 6px ${C.accentBright}` : "none" }} />)}
-          <span style={{ fontSize: 10, color: C.paperDim }}>상대</span>
-        </div>
-      </div>
-
-      {/* Seme Pressure Bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0" }}>
-        <span style={{ fontSize: 9, color: C.accentBright, width: 28 }}>상대</span>
-        <div style={{ flex: 1, height: 6, borderRadius: 3, background: C.surfaceAlt, position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: `${state.seme_pressure * 100}%`, background: state.seme_pressure > 0.65 ? C.brass : state.seme_pressure < 0.35 ? C.accentBright : C.paperDim, borderRadius: 3, transition: "width .3s, background .3s" }} />
-          <div style={{ position: "absolute", top: -2, bottom: -2, left: "50%", width: 1, background: "rgba(255,255,255,.3)" }} />
-        </div>
-        <span style={{ fontSize: 9, color: C.brass, width: 28, textAlign: "right" }}>나</span>
-      </div>
-
-      {/* Canvas */}
-      <div style={{ borderRadius: 14, overflow: "hidden", position: "relative" }}>
-        <canvas ref={canvasRef} style={{ width: "100%", height: "auto", borderRadius: 14 }} />
-        {opening && (
-          <div style={{ position: "absolute", top: opening === "head" ? "10%" : opening === "wrist" ? "40%" : opening === "waist" ? "55%" : "30%", right: "25%", fontSize: 22, color: C.accentBright, animation: "pulse .5s ease-in-out infinite", textShadow: `0 0 12px ${C.accentBright}`, pointerEvents: "none" }}>❗</div>
-        )}
-      </div>
-
-      {/* Event log */}
-      <div ref={logRef} style={{ height: 44, overflow: "auto", padding: "3px 0", marginBottom: 3 }}>
-        {eventLog.slice(-3).map((e, i) => (
-          <p key={i} style={{ fontSize: 11, color: e.side === "player" ? C.paper : C.accentBright, margin: "1px 0" }}>
-            {e.side === "player" ? "▸ " : "◂ "}{e.text}
+      )}
+      {phase === "countdown" && (
+        <div style={{
+          position: "absolute", inset: 0, display: "flex", alignItems: "center",
+          justifyContent: "center", background: "rgba(0,0,0,.5)", borderRadius: 14,
+        }}>
+          <p key={countdown} style={{
+            fontFamily: "serif", fontSize: 64, fontWeight: 900,
+            color: countdown === 0 ? C.brass : "#fff",
+            textShadow: `0 0 40px ${countdown === 0 ? C.brass : "rgba(255,255,255,.5)"}`,
+            animation: "hitPop .6s ease-out",
+          }}>
+            {countdown > 0 ? ["礼!", "構え!", "始め!"][3 - countdown] : "始め!"}
           </p>
+        </div>
+      )}
+    </div>
+  );
+
+  const hud = (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 2px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ fontSize: 11, color: C.paperDim, fontWeight: 600 }}>나</span>
+        {[0, 1].map(i => (
+          <div key={i} style={{
+            width: 18, height: 18, borderRadius: "50%",
+            background: i < gameState.score.player ? C.accent : "transparent",
+            border: `2px solid ${i < gameState.score.player ? C.accent : C.line}`,
+            boxShadow: i < gameState.score.player ? `0 0 8px ${C.accent}` : "none",
+          }} />
         ))}
       </div>
-
-      {/* Controls */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-        {/* Row 1: Distance + Seme */}
-        <div style={{ display: "flex", gap: 5 }}>
-          <button onClick={() => doAction("advance")} disabled={dist === "tsuba"} style={{ ...btn, flex: 1, opacity: dist === "tsuba" ? .4 : 1 }}>
-            <span style={{ fontSize: 14 }}>⇧</span><span style={{ fontSize: 10 }}>전진</span>
-          </button>
-          <button
-            onPointerDown={startSemeHold} onPointerUp={stopSemeHold} onPointerLeave={stopSemeHold}
-            onContextMenu={e => e.preventDefault()}
-            disabled={dist === "far"}
-            style={{ ...btn, flex: 2, background: semeHolding ? "rgba(195,163,95,.2)" : canStrike ? "rgba(195,163,95,.08)" : C.surfaceAlt, borderColor: semeHolding ? C.brass : canStrike ? C.brass : C.line, opacity: dist === "far" ? .4 : 1, boxShadow: semeHolding ? `0 0 16px rgba(195,163,95,.3)` : "none" }}>
-            <span style={{ fontSize: 12, color: C.brass, fontWeight: 700 }}>{semeHolding ? "⚔ 세메 중..." : "세메 (꾹 누르기)"}</span>
-            <span style={{ fontSize: 9, color: C.paperDim }}>{semeHolding ? "칼끝 교란 중" : "길게 눌러 빈틈 유도"}</span>
-          </button>
-          <button onClick={() => doAction("retreat")} disabled={dist === "far"} style={{ ...btn, flex: 1, opacity: dist === "far" ? .4 : 1 }}>
-            <span style={{ fontSize: 14 }}>⇩</span><span style={{ fontSize: 10 }}>후퇴</span>
-          </button>
-        </div>
-
-        {/* Row 2: Kiai (volatile 1.5s) */}
-        <button onClick={activateKiai} disabled={kiai} style={{ ...btn, width: "100%", position: "relative", overflow: "hidden", background: kiai ? "rgba(195,163,95,.18)" : C.surfaceAlt, borderColor: kiai ? C.brass : C.line }}>
-          {kiai && <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: `${(kiaiTimer / 1.5) * 100}%`, background: "rgba(195,163,95,.15)", transition: "width 50ms linear" }} />}
-          <span style={{ fontSize: 13, fontWeight: 700, color: kiai ? C.brass : C.paperDim, position: "relative", zIndex: 1 }}>
-            {kiai ? `기합! (${kiaiTimer.toFixed(1)}s) → 지금 타격!` : "기합 (탭 → 1.5초 내 타격!)"}
-          </span>
-        </button>
-
-        {/* Row 3: Strike zones */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
-          {ZONES.map(z => {
-            const isOpening = opening === z.key;
-            const disabled = !canStrike;
-            return (
-              <button key={z.key} onClick={() => doAction("strike", z.key)} disabled={disabled}
-                style={{ ...btn, opacity: disabled ? .35 : 1, background: isOpening ? "rgba(195,163,95,.12)" : C.surfaceAlt, borderColor: isOpening ? C.brass : C.line, boxShadow: isOpening ? `0 0 12px rgba(195,163,95,.2)` : "none", padding: "14px 0" }}>
-                {isOpening && <span style={{ position: "absolute", top: 3, right: 6, fontSize: 9, color: C.brass, fontWeight: 700, animation: "pulse .5s ease-in-out infinite" }}>빈틈!</span>}
-                <span style={{ fontFamily: "serif", fontSize: 22, fontWeight: 800, color: C.brass }}>{z.kanji}</span>
-                <span style={{ fontSize: 10, color: C.paperDim }}>{z.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Row 4: Kamae + push_out */}
-        <div style={{ display: "flex", gap: 5 }}>
-          {Object.entries(KAMAE_LABELS).map(([k, v]) => (
-            <button key={k} onClick={() => doAction("wait", null, k)} style={{ ...btn, flex: 1, background: state.player_kamae === k ? "rgba(195,163,95,.1)" : C.surfaceAlt, borderColor: state.player_kamae === k ? C.brass : C.line }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: state.player_kamae === k ? C.brass : C.paperDim }}>{v}</span>
-            </button>
-          ))}
-          {dist === "tsuba" && (
-            <button onClick={() => doAction("push_out")} style={{ ...btn, flex: 1 }}>
-              <span style={{ fontSize: 11, color: C.paper }}>밀어내기</span>
-            </button>
-          )}
-        </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+        <div style={{
+          width: 46, height: 46, borderRadius: "50%", display: "flex",
+          alignItems: "center", justifyContent: "center",
+          border: `2.5px solid ${timeLeft <= 10 ? C.accentBright : C.brass}`,
+          color: timeLeft <= 10 ? C.accentBright : C.brass,
+          fontFamily: "monospace", fontSize: 18, fontWeight: 800,
+        }}>{timeLeft}</div>
+        <span style={{ fontSize: 9, color: C.paperDim }}>{DIST_LABELS[dist]}</span>
       </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {[0, 1].map(i => (
+          <div key={i} style={{
+            width: 18, height: 18, borderRadius: "50%",
+            background: i < gameState.score.opponent ? C.accentBright : "transparent",
+            border: `2px solid ${i < gameState.score.opponent ? C.accentBright : C.line}`,
+            boxShadow: i < gameState.score.opponent ? `0 0 8px ${C.accentBright}` : "none",
+          }} />
+        ))}
+        <span style={{ fontSize: 11, color: C.paperDim, fontWeight: 600 }}>상대</span>
+      </div>
+    </div>
+  );
 
-      <style>{`
-        @keyframes hitPop { 0%{transform:scale(.5);opacity:0} 60%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
-        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.15)} }
-      `}</style>
+  const semebar = (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <span style={{ fontSize: 9, color: C.accentBright, width: 30 }}>상대</span>
+      <div style={{ flex: 1, height: 7, borderRadius: 4, background: C.surfaceAlt, position: "relative", overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", inset: "0 auto 0 0",
+          width: `${gameState.seme_pressure * 100}%`,
+          background: gameState.seme_pressure > 0.65 ? C.brass : gameState.seme_pressure < 0.35 ? C.accentBright : C.paperDim,
+          borderRadius: 4, transition: "width .25s, background .25s",
+        }} />
+        <div style={{ position: "absolute", top: -2, bottom: -2, left: "50%", width: 1.5, background: "rgba(255,255,255,.25)" }} />
+      </div>
+      <span style={{ fontSize: 9, color: C.brass, width: 30, textAlign: "right" }}>나</span>
+    </div>
+  );
+
+  const kiaibtn = (
+    <button
+      onClick={activateKiai}
+      disabled={kiai || phase !== "fight"}
+      style={{
+        width: "100%", position: "relative", overflow: "hidden",
+        background: kiai ? "rgba(195,163,95,.2)" : C.surfaceAlt,
+        border: `1.5px solid ${kiai ? C.brass : C.line}`,
+        borderRadius: 10, padding: "9px 0", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+      }}
+    >
+      {kiai && (
+        <div style={{
+          position: "absolute", inset: "0 auto 0 0",
+          width: `${(kiaiTimer / 1.5) * 100}%`,
+          background: "rgba(195,163,95,.2)", transition: "width 50ms linear",
+        }} />
+      )}
+      <span style={{ fontSize: 16 }}>{kiai ? "🔥" : "💨"}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: kiai ? C.brass : C.paperDim, position: "relative" }}>
+        {kiai ? `기합! ${kiaiTimer.toFixed(1)}초 내 타격!` : "기합 (탭)"}
+      </span>
+    </button>
+  );
+
+  const zoneBtns = (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
+      {Object.entries(ZONE_META).map(([zk, zm]) => {
+        const isOpening = opening === zk;
+        const disabled = !canStrike || phase !== "fight";
+        return (
+          <button
+            key={zk}
+            onClick={() => doAction("strike", zk)}
+            onPointerEnter={() => !disabled && setActiveZone(zk)}
+            onPointerLeave={() => setActiveZone(null)}
+            disabled={disabled}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center",
+              gap: 3, padding: "12px 4px",
+              background: isOpening ? `rgba(${hexToRgb(zm.color)},0.15)` : C.surfaceAlt,
+              border: `2px solid ${isOpening ? zm.color : C.line}`,
+              borderRadius: 12, cursor: disabled ? "not-allowed" : "pointer",
+              opacity: disabled ? 0.35 : 1, position: "relative",
+              boxShadow: isOpening ? `0 0 14px ${zm.color}44` : "none",
+              transition: "all .15s",
+            }}
+          >
+            {isOpening && (
+              <span style={{
+                position: "absolute", top: 3, right: 5,
+                fontSize: 8, color: zm.color, fontWeight: 800,
+                animation: "pulse .4s ease-in-out infinite",
+              }}>빈틈!</span>
+            )}
+            <span style={{ fontFamily: "serif", fontSize: 24, fontWeight: 900, color: zm.color, lineHeight: 1 }}>{zm.kanji}</span>
+            <span style={{ fontSize: 10, color: C.paperDim }}>{zm.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const moveBtns = (
+    <div style={{ display: "flex", gap: 6 }}>
+      <button onClick={() => doAction("advance")} disabled={dist === "tsuba" || phase !== "fight"}
+        style={{ ...btnBase, flex: 1, opacity: dist === "tsuba" ? .4 : 1 }}>
+        <span style={{ fontSize: 16 }}>→</span>
+        <span style={{ fontSize: 10, color: C.paperDim }}>전진</span>
+      </button>
+      <button
+        onPointerDown={startSemeHold} onPointerUp={stopSemeHold} onPointerLeave={stopSemeHold}
+        onContextMenu={e => e.preventDefault()}
+        disabled={dist === "far" || phase !== "fight"}
+        style={{
+          ...btnBase, flex: 2,
+          background: semeHolding ? "rgba(195,163,95,.18)" : canStrike ? "rgba(195,163,95,.07)" : C.surfaceAlt,
+          borderColor: semeHolding ? C.brass : canStrike ? `${C.brass}88` : C.line,
+          opacity: dist === "far" ? .4 : 1,
+          boxShadow: semeHolding ? `0 0 18px rgba(195,163,95,.3)` : "none",
+        }}
+      >
+        <span style={{ fontSize: 12, color: C.brass, fontWeight: 700 }}>
+          {semeHolding ? "⚔ 세메 중..." : "세메 (꾹)"}
+        </span>
+        <span style={{ fontSize: 9, color: C.paperDim }}>{semeHolding ? "칼끝 교란" : "빈틈 유도"}</span>
+      </button>
+      <button onClick={() => doAction("retreat")} disabled={dist === "far" || phase !== "fight"}
+        style={{ ...btnBase, flex: 1, opacity: dist === "far" ? .4 : 1 }}>
+        <span style={{ fontSize: 16 }}>←</span>
+        <span style={{ fontSize: 10, color: C.paperDim }}>후퇴</span>
+      </button>
+      {dist === "tsuba" && (
+        <button onClick={() => doAction("push_out")} style={{ ...btnBase, flex: 1 }}>
+          <span style={{ fontSize: 10, color: C.paper }}>밀어내기</span>
+        </button>
+      )}
+    </div>
+  );
+
+  const kamaeBtns = (
+    <div style={{ display: "flex", gap: 6 }}>
+      {Object.entries(KAMAE_LABELS).map(([k, v]) => (
+        <button key={k} onClick={() => doAction("wait", null, k)} disabled={phase !== "fight"}
+          style={{
+            ...btnBase, flex: 1, padding: "7px 0",
+            background: gameState.player_kamae === k ? "rgba(195,163,95,.12)" : C.surfaceAlt,
+            borderColor: gameState.player_kamae === k ? C.brass : C.line,
+          }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: gameState.player_kamae === k ? C.brass : C.paperDim }}>{v}</span>
+          <span style={{ fontSize: 9, color: C.paperDim }}>{k === "chudan" ? "기본" : k === "jodan" ? "상단" : "하단"}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  const logBox = (
+    <div ref={logRef} style={{
+      height: 48, overflow: "auto", padding: "2px 4px",
+      borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}`,
+    }}>
+      {eventLog.slice(-4).map((e, i) => (
+        <p key={i} style={{ fontSize: 11, color: e.side === "player" ? C.paper : C.accentBright, margin: "1px 0" }}>
+          {e.side === "player" ? "▸ " : "◂ "}{e.text}
+        </p>
+      ))}
+    </div>
+  );
+
+  if (phase === "ready") {
+    return (
+      <div style={wrapStyle}>
+        {canvasBlock}
+        <div style={{ padding: 14, borderRadius: 12, background: C.surface, border: `1px solid ${C.line}` }}>
+          <p style={{ fontFamily: "serif", fontSize: 22, fontWeight: 900, color: C.brass, textAlign: "center", marginBottom: 8 }}>対決 — 기검체일치</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+            {Object.entries(ZONE_META).map(([zk, zm]) => (
+              <div key={zk} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: C.surfaceAlt, border: `1px solid ${zm.color}33` }}>
+                <span style={{ fontFamily: "serif", fontSize: 22, color: zm.color, fontWeight: 900 }}>{zm.kanji}</span>
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: zm.color }}>{zm.label}</p>
+                  <p style={{ fontSize: 10, color: C.paperDim }}>
+                    {zk === "head" ? "면격 — 정수리 타격" : zk === "wrist" ? "소수 — 손목 타격" : zk === "waist" ? "도격 — 허리 타격" : "돌격 — 정면 찌름"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: C.paperDim, display: "flex", flexDirection: "column", gap: 4 }}>
+            <span>• 삼본승부 — 2본 선취 승리 (3심제)</span>
+            <span>• 세메로 상대 빈틈을 만들고 → 기합 → 타격</span>
+            <span>• 기합 후 1.5초 내 타격해야 유효!</span>
+          </div>
+        </div>
+        <button onClick={startBattle} style={{
+          width: "100%", padding: "16px 0", borderRadius: 12, fontSize: 16, fontWeight: 800,
+          background: `linear-gradient(135deg,${C.accent} 0%,#7A2E22 100%)`,
+          color: C.paper, border: "none", cursor: "pointer",
+          boxShadow: `0 4px 24px rgba(155,58,44,.4)`,
+        }}>
+          시합 시작
+        </button>
+        <style>{GLOBAL_CSS}</style>
+      </div>
+    );
+  }
+
+  if (phase === "result") {
+    const won = gameState.result === "win";
+    const lost = gameState.result === "lose";
+    return (
+      <div style={wrapStyle}>
+        {canvasBlock}
+        <div style={{ textAlign: "center", padding: "20px 0" }}>
+          <p style={{ fontFamily: "serif", fontSize: 56, fontWeight: 900, color: won ? C.brass : lost ? C.accentBright : C.paperDim }}>
+            {won ? "勝利" : lost ? "敗北" : "引分"}
+          </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 6 }}>
+            <div>
+              <p style={{ fontSize: 11, color: C.paperDim }}>나</p>
+              <p style={{ fontFamily: "serif", fontSize: 32, fontWeight: 700, color: C.paper }}>{gameState.score.player}</p>
+            </div>
+            <span style={{ fontSize: 20, color: C.paperDim }}>—</span>
+            <div>
+              <p style={{ fontSize: 11, color: C.paperDim }}>상대</p>
+              <p style={{ fontFamily: "serif", fontSize: 32, fontWeight: 700, color: C.paper }}>{gameState.score.opponent}</p>
+            </div>
+          </div>
+        </div>
+        {logBox}
+        <button onClick={() => setPhase("ready")} style={{
+          width: "100%", padding: "14px 0", borderRadius: 12, fontSize: 15, fontWeight: 800,
+          background: C.accent, color: C.paper, border: "none", cursor: "pointer",
+        }}>다시 시합</button>
+        <style>{GLOBAL_CSS}</style>
+      </div>
+    );
+  }
+
+  return (
+    <div style={wrapStyle}>
+      {hud}
+      {semebar}
+      {canvasBlock}
+      {logBox}
+      {zoneBtns}
+      {kiaibtn}
+      {moveBtns}
+      {kamaeBtns}
+      <style>{GLOBAL_CSS}</style>
     </div>
   );
 }
 
-const btn = {
-  position: "relative",
-  background: C.surfaceAlt,
-  border: `1.5px solid ${C.line}`,
-  borderRadius: 10,
-  padding: "10px 0",
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${r},${g},${b}`;
+}
+
+const btnBase = {
   display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-  cursor: "pointer", transition: "all .15s ease", color: C.paper,
+  background: C.surfaceAlt, border: `1.5px solid ${C.line}`,
+  borderRadius: 10, padding: "10px 0", cursor: "pointer",
+  transition: "all .15s", color: C.paper,
 };
+
+const GLOBAL_CSS = `
+  @keyframes hitPop { 0%{transform:scale(.4);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.35} }
+`;
