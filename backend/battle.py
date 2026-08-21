@@ -94,6 +94,51 @@ class BattleSession:
             "result": self.result,
         }
 
+    def to_dict(self):
+        return {
+            "player_stats": self.player_stats,
+            "opponent_stats": self.opponent_stats,
+            "opponent_name": self.opponent_name,
+            "player_score": self.player_score,
+            "opponent_score": self.opponent_score,
+            "finished": self.finished,
+            "result": self.result,
+            "distance": self.distance,
+            "player_kamae": self.player_kamae,
+            "opponent_kamae": self.opponent_kamae,
+            "tsuba_turns": self.tsuba_turns,
+            "hansoku": self.hansoku,
+            "turn": self.turn,
+            "log": self.log,
+            "seme_pressure": self.seme_pressure,
+            "opening_zone": self.opening_zone,
+            "opening_until": self.opening_until,
+            "last_action_time": self.last_action_time,
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        s = cls.__new__(cls)
+        s.player_stats = d["player_stats"]
+        s.opponent_stats = d["opponent_stats"]
+        s.opponent_name = d["opponent_name"]
+        s.player_score = d["player_score"]
+        s.opponent_score = d["opponent_score"]
+        s.finished = d["finished"]
+        s.result = d["result"]
+        s.distance = d["distance"]
+        s.player_kamae = d["player_kamae"]
+        s.opponent_kamae = d["opponent_kamae"]
+        s.tsuba_turns = d["tsuba_turns"]
+        s.hansoku = d["hansoku"]
+        s.turn = d["turn"]
+        s.log = d["log"]
+        s.seme_pressure = d["seme_pressure"]
+        s.opening_zone = d["opening_zone"]
+        s.opening_until = d["opening_until"]
+        s.last_action_time = d["last_action_time"]
+        return s
+
     def _ai_action(self):
         if self.distance == "far":
             return {"action": "advance"} if random.random() < 0.7 else {"action": "wait"}

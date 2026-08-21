@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, Date, ForeignKey, Enum, create_engine
+import os
+from sqlalchemy import Column, Integer, String, Boolean, Float, Date, ForeignKey, Enum, Text, create_engine
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 import enum
 
@@ -79,7 +80,19 @@ class CoachFeedback(Base):
     student = relationship("Student", back_populates="feedbacks")
 
 
-engine = create_engine("sqlite:///kendo.db")
+class ActiveBattleSession(Base):
+    __tablename__ = "active_battle_sessions"
+    student_id = Column(Integer, primary_key=True)
+    state_json = Column(Text, nullable=False)
+
+
+_db_url = os.environ.get("DATABASE_URL", "sqlite:///kendo.db")
+# Vercel Postgres uses postgres:// but SQLAlchemy needs postgresql://
+if _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+
+_connect_args = {"check_same_thread": False} if _db_url.startswith("sqlite") else {}
+engine = create_engine(_db_url, connect_args=_connect_args)
 SessionLocal = sessionmaker(bind=engine)
 
 

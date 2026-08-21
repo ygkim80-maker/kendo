@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 
-const API = "http://localhost:8000";
+const API = import.meta.env.VITE_API_URL ?? "";
 
 const ZONE_META = {
   head:   { kanji: "面",   label: "머리",  color: "#4FC3F7" },

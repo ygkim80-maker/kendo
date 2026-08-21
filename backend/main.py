@@ -1,10 +1,11 @@
+import json
 from datetime import date, timedelta
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from models import init_db, get_db, Student, AttendanceLog, SkillStat, MatchRecord, CoachFeedback, Zone, MatchResult, OpponentType
+from models import init_db, get_db, Student, AttendanceLog, SkillStat, MatchRecord, CoachFeedback, Zone, MatchResult, OpponentType, ActiveBattleSession
 from schemas import (
     StudentCreate, StudentOut, AttendanceCreate, AttendanceOut,
     SkillStatOut, SkillStatCreate, MatchRecordOut,
@@ -16,8 +17,6 @@ from seed import seed
 
 app = FastAPI(title="정진 — Kendo Training API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-
-active_battles: dict[int, BattleSession] = {}
 
 
 @app.on_event("startup")
@@ -168,7 +167,13 @@ def battle_start(data: BattleStart, db: Session = Depends(get_db)):
         opponent_name = "AI 상대"
 
     session = BattleSession(player_stats, opponent_stats, opponent_name)
-    active_battles[data.student_id] = session
+
+    row = db.query(ActiveBattleSession).filter(ActiveBattleSession.student_id == data.student_id).first()
+    if row:
+        row.state_json = json.dumps(session.to_dict())
+    else:
+        db.add(ActiveBattleSession(student_id=data.student_id, state_json=json.dumps(session.to_dict())))
+    db.commit()
 
     return {
         "status": "started",
@@ -178,23 +183,28 @@ def battle_start(data: BattleStart, db: Session = Depends(get_db)):
 
 
 @app.post("/api/battle/action/{student_id}")
-def battle_action(student_id: int, action: BattleAction):
-    session = active_battles.get(student_id)
-    if not session:
+def battle_action(student_id: int, action: BattleAction, db: Session = Depends(get_db)):
+    row = db.query(ActiveBattleSession).filter(ActiveBattleSession.student_id == student_id).first()
+    if not row:
         raise HTTPException(404, "No active battle")
-    return session.process(
+    session = BattleSession.from_dict(json.loads(row.state_json))
+    result = session.process(
         action=action.action,
         zone=action.zone,
         kiai=action.kiai,
         kamae=action.kamae_change,
     )
+    row.state_json = json.dumps(session.to_dict())
+    db.commit()
+    return result
 
 
 @app.post("/api/battle/timeout/{student_id}")
 def battle_timeout(student_id: int, db: Session = Depends(get_db)):
-    session = active_battles.get(student_id)
-    if not session:
+    row = db.query(ActiveBattleSession).filter(ActiveBattleSession.student_id == student_id).first()
+    if not row:
         raise HTTPException(404, "No active battle")
+    session = BattleSession.from_dict(json.loads(row.state_json))
     result = session.timeout_judge()
 
     record = MatchRecord(
@@ -207,16 +217,17 @@ def battle_timeout(student_id: int, db: Session = Depends(get_db)):
         date=date.today(),
     )
     db.add(record)
+    db.delete(row)
     db.commit()
-    del active_battles[student_id]
     return result
 
 
 @app.post("/api/battle/finish/{student_id}")
 def battle_finish(student_id: int, db: Session = Depends(get_db)):
-    session = active_battles.get(student_id)
-    if not session:
+    row = db.query(ActiveBattleSession).filter(ActiveBattleSession.student_id == student_id).first()
+    if not row:
         raise HTTPException(404, "No active battle")
+    session = BattleSession.from_dict(json.loads(row.state_json))
     if not session.finished:
         return session.timeout_judge()
 
@@ -230,6 +241,6 @@ def battle_finish(student_id: int, db: Session = Depends(get_db)):
         date=date.today(),
     )
     db.add(record)
+    db.delete(row)
     db.commit()
-    del active_battles[student_id]
     return {"result": session.result, "score": {"player": session.player_score, "opponent": session.opponent_score}}
