@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const API = "http://localhost:8000";
 
@@ -10,277 +10,141 @@ const ZONE_META = {
   thrust: { kanji: "突",   label: "찌름",  color: "#F06292" },
 };
 
-// ── Chibi Kendo Fighter ────────────────────────────────────────────────────
-// origin (0,0) = feet level. character height ~220px upward.
 function drawChibi(ctx, opts = {}) {
   const {
-    flip = false,
-    strike = null,   // "head"|"wrist"|"waist"|"thrust"
-    hitZone = null,
-    activeZone = null,
-    shakeX = 0,
-    isHit = false,
-    kamae = "chudan",
+    flip = false, strike = null, hitZone = null, activeZone = null,
+    shakeX = 0, isHit = false, kamae = "chudan",
   } = opts;
-
   ctx.save();
   if (flip) ctx.scale(-1, 1);
   ctx.translate(shakeX, 0);
-
   const hitGlow = isHit ? (hitZone ? ZONE_META[hitZone]?.color : "#FF5252") : null;
   if (hitGlow) { ctx.shadowColor = hitGlow; ctx.shadowBlur = 40; }
-
-  // ── palette ──
-  const gi      = "#4A5568";
-  const hakama  = "#1A237E";
-  const skin    = "#FFCCBC";
-  const men_col = "#37474F";
-  const do_base = "#E65100";
-  const kote_col= "#2E7D32";
-
-  // ── FEET / TABI ──
+  const gi = "#4A5568", hakama = "#1A237E", skin = "#FFCCBC", men_col = "#37474F", do_base = "#E65100", kote_col = "#2E7D32";
   ctx.fillStyle = "#eee";
-  ctx.beginPath();
-  ctx.ellipse(-13, 0, 10, 5, -0.15, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(13, 0, 10, 5, 0.15, 0, Math.PI * 2);
-  ctx.fill();
-
-  // ── HAKAMA ──
+  ctx.beginPath(); ctx.ellipse(-13, 0, 10, 5, -0.15, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(13, 0, 10, 5, 0.15, 0, Math.PI * 2); ctx.fill();
   {
     const hg = ctx.createLinearGradient(-25, -45, 25, -10);
-    hg.addColorStop(0, "#0D47A1");
-    hg.addColorStop(0.5, hakama);
-    hg.addColorStop(1, "#0D47A1");
+    hg.addColorStop(0, "#0D47A1"); hg.addColorStop(0.5, hakama); hg.addColorStop(1, "#0D47A1");
     ctx.fillStyle = hg;
     ctx.beginPath();
-    ctx.moveTo(-18, -50);
-    ctx.lineTo(18, -50);
+    ctx.moveTo(-18, -50); ctx.lineTo(18, -50);
     ctx.bezierCurveTo(22, -30, 28, -15, 28, 0);
-    ctx.lineTo(-28, 0);
-    ctx.bezierCurveTo(-28, -15, -22, -30, -18, -50);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
-    ctx.lineWidth = 1;
+    ctx.lineTo(-28, 0); ctx.bezierCurveTo(-28, -15, -22, -30, -18, -50); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, -50); ctx.lineTo(0, 0); ctx.stroke();
-    for (let i = -12; i <= 12; i += 12) {
-      ctx.beginPath(); ctx.moveTo(i, -48); ctx.lineTo(i + 4, 0); ctx.stroke();
-    }
+    for (let i = -12; i <= 12; i += 12) { ctx.beginPath(); ctx.moveTo(i, -48); ctx.lineTo(i + 4, 0); ctx.stroke(); }
   }
-
-  // ── BODY (keikogi) ──
   {
     const bg = ctx.createLinearGradient(-16, -100, 16, -50);
-    bg.addColorStop(0, "#616161");
-    bg.addColorStop(1, gi);
+    bg.addColorStop(0, "#616161"); bg.addColorStop(1, gi);
     ctx.fillStyle = bg;
     ctx.beginPath();
-    ctx.moveTo(-16, -52);
-    ctx.bezierCurveTo(-18, -70, -15, -95, -10, -105);
-    ctx.lineTo(10, -105);
-    ctx.bezierCurveTo(15, -95, 18, -70, 16, -52);
-    ctx.closePath();
-    ctx.fill();
+    ctx.moveTo(-16, -52); ctx.bezierCurveTo(-18, -70, -15, -95, -10, -105);
+    ctx.lineTo(10, -105); ctx.bezierCurveTo(15, -95, 18, -70, 16, -52); ctx.closePath(); ctx.fill();
   }
-
-  // ── DO (chest armor) ──
   {
     const waistHL = hitZone === "waist" || activeZone === "waist";
     const dg = ctx.createLinearGradient(-20, -95, 20, -55);
-    if (waistHL) {
-      dg.addColorStop(0, "#FFE082");
-      dg.addColorStop(0.5, ZONE_META.waist.color);
-      dg.addColorStop(1, "#FF8F00");
-    } else {
-      dg.addColorStop(0, "#FF8F00");
-      dg.addColorStop(0.5, do_base);
-      dg.addColorStop(1, "#BF360C");
-    }
+    if (waistHL) { dg.addColorStop(0, "#FFE082"); dg.addColorStop(0.5, ZONE_META.waist.color); dg.addColorStop(1, "#FF8F00"); }
+    else { dg.addColorStop(0, "#FF8F00"); dg.addColorStop(0.5, do_base); dg.addColorStop(1, "#BF360C"); }
     ctx.fillStyle = dg;
-    ctx.beginPath();
-    ctx.roundRect(-20, -95, 40, 42, 6);
-    ctx.fill();
-    ctx.strokeStyle = waistHL ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.25)";
-    ctx.lineWidth = 2;
-    for (let y = -88; y <= -62; y += 10) {
-      ctx.beginPath();
-      ctx.moveTo(-19, y); ctx.lineTo(19, y);
-      ctx.stroke();
-    }
-    if (waistHL) {
-      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.roundRect(-20, -95, 40, 42, 6); ctx.stroke();
-    }
+    ctx.beginPath(); ctx.roundRect(-20, -95, 40, 42, 6); ctx.fill();
+    ctx.strokeStyle = waistHL ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.25)"; ctx.lineWidth = 2;
+    for (let y = -88; y <= -62; y += 10) { ctx.beginPath(); ctx.moveTo(-19, y); ctx.lineTo(19, y); ctx.stroke(); }
+    if (waistHL) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(-20, -95, 40, 42, 6); ctx.stroke(); }
     ctx.strokeStyle = "#FFB74D"; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(-20, -90); ctx.lineTo(-28, -80); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(20, -90); ctx.lineTo(28, -80); ctx.stroke();
   }
-
-  // ── ARMS & KOTE ──
   {
     const wristHL = hitZone === "wrist" || activeZone === "wrist";
     const kg = (x1, y1, x2, y2) => {
       const g = ctx.createLinearGradient(x1, y1, x2, y2);
-      g.addColorStop(0, wristHL ? "#A5D6A7" : "#43A047");
-      g.addColorStop(1, wristHL ? ZONE_META.wrist.color : kote_col);
-      return g;
+      g.addColorStop(0, wristHL ? "#A5D6A7" : "#43A047"); g.addColorStop(1, wristHL ? ZONE_META.wrist.color : kote_col); return g;
     };
     const drawArm = (x1, y1, x2, y2, r = 6) => {
-      const len = Math.hypot(x2 - x1, y2 - y1);
-      const angle = Math.atan2(y2 - y1, x2 - x1);
-      ctx.save();
-      ctx.translate(x1, y1);
-      ctx.rotate(angle);
+      const len = Math.hypot(x2 - x1, y2 - y1), angle = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save(); ctx.translate(x1, y1); ctx.rotate(angle);
       ctx.fillStyle = kg(0, 0, len, 0);
-      ctx.beginPath();
-      ctx.roundRect(0, -r, len, r * 2, r);
-      ctx.fill();
+      ctx.beginPath(); ctx.roundRect(0, -r, len, r * 2, r); ctx.fill();
       if (wristHL) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(); }
       ctx.restore();
     };
-    if (strike === "head") {
-      drawArm(-8, -100, -8, -155, 7);
-      drawArm(8, -100, 8, -155, 7);
-    } else if (strike === "wrist") {
-      drawArm(16, -85, 65, -60, 7);
-    } else if (strike === "waist") {
-      drawArm(16, -75, 68, -35, 7);
-    } else if (strike === "thrust") {
-      drawArm(12, -90, 72, -90, 7);
-    } else {
-      drawArm(-20, -92, -36, -80, 7);
-      drawArm(18, -92, 34, -78, 7);
-    }
+    if (strike === "head") { drawArm(-8, -100, -8, -155, 7); drawArm(8, -100, 8, -155, 7); }
+    else if (strike === "wrist") { drawArm(16, -85, 65, -60, 7); }
+    else if (strike === "waist") { drawArm(16, -75, 68, -35, 7); }
+    else if (strike === "thrust") { drawArm(12, -90, 72, -90, 7); }
+    else { drawArm(-20, -92, -36, -80, 7); drawArm(18, -92, 34, -78, 7); }
   }
-
-  // ── HEAD / MEN (big chibi head) ──
   {
-    const headHL = hitZone === "head" || activeZone === "head";
-    const HR = 34;
-    const HY = -145;
-    ctx.fillStyle = skin;
-    ctx.beginPath();
-    ctx.roundRect(-8, -112, 16, 14, 4);
-    ctx.fill();
-    ctx.fillStyle = skin;
-    ctx.beginPath(); ctx.arc(0, HY + 6, HR - 6, 0, Math.PI * 2); ctx.fill();
+    const headHL = hitZone === "head" || activeZone === "head", HR = 34, HY = -145;
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.roundRect(-8, -112, 16, 14, 4); ctx.fill();
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(0, HY + 6, HR - 6, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#1a1a2e";
     ctx.beginPath(); ctx.ellipse(-10, HY + 4, 6, 8, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(10, HY + 4, 6, 8, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#fff";
     ctx.beginPath(); ctx.arc(-8, HY + 1, 2.5, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(12, HY + 1, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#263238";
-    ctx.beginPath();
-    ctx.ellipse(0, HY + HR + 4, HR - 4, 16, 0, 0, Math.PI);
-    ctx.fill();
+    ctx.fillStyle = "#263238"; ctx.beginPath(); ctx.ellipse(0, HY + HR + 4, HR - 4, 16, 0, 0, Math.PI); ctx.fill();
     const dg = ctx.createRadialGradient(-8, HY - 12, 4, 0, HY, HR);
-    dg.addColorStop(0, headHL ? "#80D8FF" : "#546E7A");
-    dg.addColorStop(0.6, headHL ? ZONE_META.head.color : men_col);
-    dg.addColorStop(1, headHL ? "#01579B" : "#102027");
-    ctx.fillStyle = dg;
-    ctx.beginPath(); ctx.arc(0, HY, HR, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = headHL ? "rgba(255,255,255,0.9)" : "rgba(144,164,174,0.7)";
-    ctx.lineWidth = headHL ? 3 : 2.5;
-    ctx.lineCap = "round";
-    for (let bx = -20; bx <= 20; bx += 10) {
-      ctx.beginPath();
-      ctx.moveTo(bx, HY - 6);
-      ctx.lineTo(bx, HY + HR - 4);
-      ctx.stroke();
-    }
-    ctx.strokeStyle = headHL ? "rgba(255,255,255,0.8)" : "#37474F";
-    ctx.lineWidth = 3;
+    dg.addColorStop(0, headHL ? "#80D8FF" : "#546E7A"); dg.addColorStop(0.6, headHL ? ZONE_META.head.color : men_col); dg.addColorStop(1, headHL ? "#01579B" : "#102027");
+    ctx.fillStyle = dg; ctx.beginPath(); ctx.arc(0, HY, HR, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = headHL ? "rgba(255,255,255,0.9)" : "rgba(144,164,174,0.7)"; ctx.lineWidth = headHL ? 3 : 2.5; ctx.lineCap = "round";
+    for (let bx = -20; bx <= 20; bx += 10) { ctx.beginPath(); ctx.moveTo(bx, HY - 6); ctx.lineTo(bx, HY + HR - 4); ctx.stroke(); }
+    ctx.strokeStyle = headHL ? "rgba(255,255,255,0.8)" : "#37474F"; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(0, HY, HR, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(0, HY, HR, 0.15, Math.PI - 0.15); ctx.stroke();
-    if (headHL) {
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 3;
-      ctx.setLineDash([6, 4]);
-      ctx.beginPath(); ctx.arc(0, HY, HR + 6, 0, Math.PI * 2); ctx.stroke();
-      ctx.setLineDash([]);
-    }
+    if (headHL) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.arc(0, HY, HR + 6, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); }
   }
-
-  // ── SHINAI (long bamboo sword) ──
   {
     const thrustHL = hitZone === "thrust" || activeZone === "thrust";
     ctx.lineCap = "round";
     let sx, sy, ex, ey, tX, tY;
-    if (strike === "head") {
-      sx = 0; sy = -155; ex = 0; ey = -245; tX = -7; tY = -158;
-    } else if (strike === "wrist") {
-      sx = 58; sy = -58; ex = 120; ey = -20; tX = 55; tY = -64;
-    } else if (strike === "waist") {
-      sx = 62; sy = -32; ex = 128; ey = 12; tX = 58; tY = -38;
-    } else if (strike === "thrust") {
-      sx = 64; sy = -88; ex = 140; ey = -88; tX = 60; tY = -94;
-    } else if (kamae === "jodan") {
-      sx = 10; sy = -108; ex = 46; ey = -195; tX = 6; tY = -112;
-    } else {
-      const endY = kamae === "gedan" ? -55 : -195;
-      sx = 14; sy = -80; ex = 48; ey = endY; tX = 10; tY = -84;
-    }
+    if (strike === "head") { sx=0; sy=-155; ex=0; ey=-245; tX=-7; tY=-158; }
+    else if (strike === "wrist") { sx=58; sy=-58; ex=120; ey=-20; tX=55; tY=-64; }
+    else if (strike === "waist") { sx=62; sy=-32; ex=128; ey=12; tX=58; tY=-38; }
+    else if (strike === "thrust") { sx=64; sy=-88; ex=140; ey=-88; tX=60; tY=-94; }
+    else if (kamae === "jodan") { sx=10; sy=-108; ex=46; ey=-195; tX=6; tY=-112; }
+    else { const endY = kamae === "gedan" ? -55 : -195; sx=14; sy=-80; ex=48; ey=endY; tX=10; tY=-84; }
     const sg = ctx.createLinearGradient(sx, sy, ex, ey);
-    sg.addColorStop(0, "#6D4C41");
-    sg.addColorStop(0.3, thrustHL ? ZONE_META.thrust.color : "#A1887F");
-    sg.addColorStop(0.7, "#BCAAA4");
-    sg.addColorStop(1, "#FFF9C4");
-    ctx.strokeStyle = sg;
-    ctx.lineWidth = thrustHL ? 6 : 5;
+    sg.addColorStop(0, "#6D4C41"); sg.addColorStop(0.3, thrustHL ? ZONE_META.thrust.color : "#A1887F"); sg.addColorStop(0.7, "#BCAAA4"); sg.addColorStop(1, "#FFF9C4");
+    ctx.strokeStyle = sg; ctx.lineWidth = thrustHL ? 6 : 5;
     ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
-    ctx.strokeStyle = "rgba(80,50,40,0.5)";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(80,50,40,0.5)"; ctx.lineWidth = 2;
     for (let i = 1; i <= 3; i++) {
-      const t = i / 4;
-      const nx = sx + (ex - sx) * t, ny = sy + (ey - sy) * t;
+      const t = i / 4, nx = sx + (ex - sx) * t, ny = sy + (ey - sy) * t;
       const ang = Math.atan2(ey - sy, ex - sx) + Math.PI / 2;
-      ctx.beginPath();
-      ctx.moveTo(nx - Math.cos(ang) * 4, ny - Math.sin(ang) * 4);
-      ctx.lineTo(nx + Math.cos(ang) * 4, ny + Math.sin(ang) * 4);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(nx - Math.cos(ang)*4, ny - Math.sin(ang)*4); ctx.lineTo(nx + Math.cos(ang)*4, ny + Math.sin(ang)*4); ctx.stroke();
     }
     const angle = Math.atan2(ey - sy, ex - sx);
-    ctx.save();
-    ctx.translate(tX + 5, tY + 5);
-    ctx.rotate(angle);
-    const tg = ctx.createLinearGradient(-2, -8, 2, 8);
-    tg.addColorStop(0, "#5D4037"); tg.addColorStop(1, "#3E2723");
-    ctx.fillStyle = tg;
-    ctx.beginPath(); ctx.ellipse(0, 0, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-    ctx.fillStyle = "#FFF9C4";
-    ctx.strokeStyle = "#F9A825"; ctx.lineWidth = 2;
+    ctx.save(); ctx.translate(tX + 5, tY + 5); ctx.rotate(angle);
+    const tg = ctx.createLinearGradient(-2, -8, 2, 8); tg.addColorStop(0, "#5D4037"); tg.addColorStop(1, "#3E2723");
+    ctx.fillStyle = tg; ctx.beginPath(); ctx.ellipse(0, 0, 9, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    ctx.fillStyle = "#FFF9C4"; ctx.strokeStyle = "#F9A825"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(ex, ey, 4.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
-
   ctx.restore();
 }
 
-// ── Hit Flash ──────────────────────────────────────────────────────────────
 function drawHitFlash(ctx, x, y, zone, alpha) {
   if (!zone || alpha <= 0) return;
-  const col = ZONE_META[zone]?.color || "#fff";
-  const kanji = ZONE_META[zone]?.kanji || "";
+  const col = ZONE_META[zone]?.color || "#fff", kanji = ZONE_META[zone]?.kanji || "";
   const offsets = { head: [0, -145], wrist: [50, -60], waist: [0, -75], thrust: [50, -88] };
   const [dx, dy] = offsets[zone] || [0, -100];
   const hx = x + dx, hy = y + dy;
   ctx.save();
   ctx.globalAlpha = alpha;
   const ringR = 30 + (1 - alpha) * 30;
-  ctx.strokeStyle = col;
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = col; ctx.lineWidth = 4;
   ctx.beginPath(); ctx.arc(hx, hy, ringR, 0, Math.PI * 2); ctx.stroke();
-  ctx.lineWidth = 2;
-  ctx.globalAlpha = alpha * 0.5;
+  ctx.lineWidth = 2; ctx.globalAlpha = alpha * 0.5;
   ctx.beginPath(); ctx.arc(hx, hy, ringR * 1.5, 0, Math.PI * 2); ctx.stroke();
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = col;
+  ctx.globalAlpha = alpha; ctx.fillStyle = col;
   for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2;
-    const r1 = 12, r2 = 26 + (1 - alpha) * 20;
+    const a = (i / 12) * Math.PI * 2, r1 = 12, r2 = 26 + (1 - alpha) * 20;
     ctx.beginPath();
     ctx.moveTo(hx + Math.cos(a - 0.12) * r1, hy + Math.sin(a - 0.12) * r1);
     ctx.lineTo(hx + Math.cos(a) * r2, hy + Math.sin(a) * r2);
@@ -290,102 +154,66 @@ function drawHitFlash(ctx, x, y, zone, alpha) {
   const floatY = hy - 50 - (1 - alpha) * 25;
   ctx.font = `bold ${28 + Math.round((1 - alpha) * 8)}px "Noto Serif", serif`;
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.strokeStyle = "#000"; ctx.lineWidth = 5;
-  ctx.globalAlpha = alpha;
-  ctx.strokeText(kanji, hx, floatY);
-  ctx.fillStyle = "#fff";
-  ctx.fillText(kanji, hx, floatY);
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 5; ctx.globalAlpha = alpha;
+  ctx.strokeText(kanji, hx, floatY); ctx.fillStyle = "#fff"; ctx.fillText(kanji, hx, floatY);
   ctx.restore();
 }
 
-// ── Referee ────────────────────────────────────────────────────────────────
 function drawReferee(ctx, x, y, scale = 0.7, flagUp = false) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
-  ctx.fillStyle = "#1a1a2e";
-  ctx.beginPath(); ctx.roundRect(-11, -30, 22, 40, 3); ctx.fill();
-  ctx.fillStyle = "#FFCCBC";
-  ctx.beginPath(); ctx.arc(0, -38, 12, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#111";
-  ctx.beginPath(); ctx.roundRect(-13, -54, 26, 18, 2); ctx.fill();
+  ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.fillStyle = "#1a1a2e"; ctx.beginPath(); ctx.roundRect(-11, -30, 22, 40, 3); ctx.fill();
+  ctx.fillStyle = "#FFCCBC"; ctx.beginPath(); ctx.arc(0, -38, 12, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#111"; ctx.beginPath(); ctx.roundRect(-13, -54, 26, 18, 2); ctx.fill();
   ctx.beginPath(); ctx.roundRect(-7, -62, 14, 10, 2); ctx.fill();
-  ctx.strokeStyle = flagUp ? "#ef5350" : "#eee";
-  ctx.lineWidth = 3; ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(8, -22);
-  ctx.lineTo(flagUp ? 30 : -2, flagUp ? -62 : 8);
-  ctx.stroke();
+  ctx.strokeStyle = flagUp ? "#ef5350" : "#eee"; ctx.lineWidth = 3; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(8, -22); ctx.lineTo(flagUp ? 30 : -2, flagUp ? -62 : 8); ctx.stroke();
   ctx.fillStyle = flagUp ? "#ef5350" : "#eee";
   ctx.beginPath();
-  if (flagUp) {
-    ctx.moveTo(30, -62); ctx.lineTo(52, -50); ctx.lineTo(32, -38);
-  } else {
-    ctx.moveTo(-2, 8); ctx.lineTo(18, 14); ctx.lineTo(0, 26);
-  }
+  if (flagUp) { ctx.moveTo(30, -62); ctx.lineTo(52, -50); ctx.lineTo(32, -38); }
+  else { ctx.moveTo(-2, 8); ctx.lineTo(18, 14); ctx.lineTo(0, 26); }
   ctx.closePath(); ctx.fill();
   ctx.restore();
 }
 
-// ── Scene Render ────────────────────────────────────────────────────────────
 function renderScene(canvas, state) {
   const ctx = canvas.getContext("2d");
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
   const sky = ctx.createLinearGradient(0, 0, 0, H * 0.58);
-  sky.addColorStop(0, "#050510");
-  sky.addColorStop(0.6, "#0a1040");
-  sky.addColorStop(1, "#152060");
+  sky.addColorStop(0, "#050510"); sky.addColorStop(0.6, "#0a1040"); sky.addColorStop(1, "#152060");
   ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H * 0.58);
   ctx.fillStyle = "#fff";
   for (const [sx, sy, r] of [[60,22,1.3],[180,40,1],[320,18,1.5],[480,35,1.1],[640,14,1.4],[800,42,1],[920,24,1.3],[1100,38,1]]) {
-    ctx.globalAlpha = 0.5 + Math.sin(sx * 0.3) * 0.3;
-    ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.5 + Math.sin(sx * 0.3) * 0.3; ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
   }
   ctx.globalAlpha = 1;
   ctx.fillStyle = "#FFF9C4"; ctx.shadowColor = "#FFF59D"; ctx.shadowBlur = 28;
   ctx.beginPath(); ctx.arc(W - 100, 55, 26, 0, Math.PI * 2); ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = "#0a1040";
+  ctx.shadowBlur = 0; ctx.fillStyle = "#0a1040";
   ctx.beginPath(); ctx.arc(W - 88, 47, 21, 0, Math.PI * 2); ctx.fill();
   const floor = ctx.createLinearGradient(0, H * 0.58, 0, H);
-  floor.addColorStop(0, "#8D6E63");
-  floor.addColorStop(0.3, "#6D4C41");
-  floor.addColorStop(1, "#3E2723");
+  floor.addColorStop(0, "#8D6E63"); floor.addColorStop(0.3, "#6D4C41"); floor.addColorStop(1, "#3E2723");
   ctx.fillStyle = floor; ctx.fillRect(0, H * 0.58, W, H * 0.42);
   ctx.strokeStyle = "rgba(255,255,255,0.25)"; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(0, H * 0.58); ctx.lineTo(W, H * 0.58); ctx.stroke();
   ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(W * 0.08, H * 0.58); ctx.lineTo(W * 0.5, H); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(W * 0.92, H * 0.58); ctx.lineTo(W * 0.5, H); ctx.stroke();
-  ctx.setLineDash([8, 8]);
-  ctx.beginPath(); ctx.moveTo(W / 2, H * 0.58); ctx.lineTo(W / 2, H); ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.setLineDash([8, 8]); ctx.beginPath(); ctx.moveTo(W / 2, H * 0.58); ctx.lineTo(W / 2, H); ctx.stroke(); ctx.setLineDash([]);
   drawReferee(ctx, 80, H * 0.82, 0.7, state.playerScore > 0);
   drawReferee(ctx, W / 2, H * 0.72, 0.6, false);
   drawReferee(ctx, W - 80, H * 0.82, 0.7, state.oppScore > 0);
   const gap = state.distance === "far" ? 240 : state.distance === "issoku" ? 135 : 80;
   const feetY = Math.round(H * 0.6);
-  const playerX = W / 2 - gap;
-  const oppX = W / 2 + gap;
+  const playerX = W / 2 - gap, oppX = W / 2 + gap;
   ctx.fillStyle = "rgba(0,0,0,0.35)";
   ctx.beginPath(); ctx.ellipse(playerX, feetY + 2, 28, 7, 0, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(oppX, feetY + 2, 28, 7, 0, 0, Math.PI * 2); ctx.fill();
   ctx.save(); ctx.translate(playerX, feetY);
-  drawChibi(ctx, {
-    flip: false, strike: state.playerStrike,
-    hitZone: state.hitTarget === "player" ? state.hitZone : null,
-    activeZone: state.activeZone,
-    shakeX: state.playerSeme ? (Math.random() - 0.5) * 5 : 0,
-    isHit: state.hitTarget === "player", kamae: state.playerKamae,
-  });
+  drawChibi(ctx, { flip: false, strike: state.playerStrike, hitZone: state.hitTarget === "player" ? state.hitZone : null, activeZone: state.activeZone, shakeX: state.playerSeme ? (Math.random() - 0.5) * 5 : 0, isHit: state.hitTarget === "player", kamae: state.playerKamae });
   ctx.restore();
   ctx.save(); ctx.translate(oppX, feetY);
-  drawChibi(ctx, {
-    flip: true, strike: state.oppStrike,
-    hitZone: state.hitTarget === "opponent" ? state.hitZone : null,
-    isHit: state.hitTarget === "opponent", kamae: "chudan",
-  });
+  drawChibi(ctx, { flip: true, strike: state.oppStrike, hitZone: state.hitTarget === "opponent" ? state.hitZone : null, isHit: state.hitTarget === "opponent", kamae: "chudan" });
   ctx.restore();
   if (state.flashAlpha > 0 && state.hitZone) {
     const fx = state.hitTarget === "player" ? playerX : oppX;
@@ -397,15 +225,12 @@ function renderScene(canvas, state) {
 }
 
 function useScene(canvasRef, sceneState) {
-  useEffect(() => {
-    const c = canvasRef.current;
-    if (c) renderScene(c, sceneState);
-  });
+  useEffect(() => { const c = canvasRef.current; if (c) renderScene(c, sceneState); });
 }
 
-// ── Main Component ──────────────────────────────────────────────────────────
 export default function Battle() {
   const { studentId } = useParams();
+  const navigate = useNavigate();
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ w: 960, h: 440 });
@@ -461,27 +286,19 @@ export default function Battle() {
   }
 
   const sceneState = {
-    playerScore: battle?.player_score ?? 0,
-    oppScore: battle?.opponent_score ?? 0,
-    distance: battle?.distance ?? "far",
-    playerStrike, oppStrike,
+    playerScore: battle?.player_score ?? 0, oppScore: battle?.opponent_score ?? 0,
+    distance: battle?.distance ?? "far", playerStrike, oppStrike,
     hitZone: flashZone, hitTarget: flashTarget, flashAlpha,
     activeZone, playerSeme: holding === "seme", playerKamae: kamae,
   };
   useScene(canvasRef, sceneState);
 
   async function startBattle() {
-    const body = {
-      student_id: parseInt(studentId), opponent_type: oppType,
-      opponent_student_id: oppType === "ghost" && oppId ? parseInt(oppId) : null,
-    };
-    const r = await fetch(`${API}/api/battle/start`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-    });
+    const body = { student_id: parseInt(studentId), opponent_type: oppType, opponent_student_id: oppType === "ghost" && oppId ? parseInt(oppId) : null };
+    const r = await fetch(`${API}/api/battle/start`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!r.ok) { alert("시합 시작 실패"); return; }
     const data = await r.json();
-    setOppName(data.opponent_name); setBattle(data);
-    setPhase("fighting"); setTimer(180); setLog([]);
+    setOppName(data.opponent_name); setBattle(data); setPhase("fighting"); setTimer(180); setLog([]);
   }
 
   const sendAction = useCallback(async (action, zone) => {
@@ -536,9 +353,7 @@ export default function Battle() {
         {oppType === "ghost" && (
           <select value={oppId} onChange={e => setOppId(e.target.value)} className="w-full bg-gray-700 rounded-xl p-3 text-lg">
             <option value="">-- 선수 선택 --</option>
-            {students.filter(s => s.id !== parseInt(studentId)).map(s => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
+            {students.filter(s => s.id !== parseInt(studentId)).map(s => (<option key={s.id} value={s.id}>{s.name}</option>))}
           </select>
         )}
         <button onClick={startBattle} className="bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl text-2xl mt-2">始 め ！</button>
@@ -555,58 +370,51 @@ export default function Battle() {
         </div>
         <div className="text-3xl font-bold">{won ? "승리!" : draw ? "무승부" : "패배..."}</div>
         <div className="text-xl text-gray-300">{result?.score?.player ?? 0} 본 : {result?.score?.opponent ?? 0} 본</div>
-        <button onClick={() => { setPhase("setup"); setBattle(null); setResult(null); setTimer(180); }}
-          className="bg-blue-600 hover:bg-blue-500 px-8 py-4 rounded-2xl font-bold text-xl mt-4">다시 하기</button>
+        <div className="flex gap-4 mt-4">
+          <button onClick={() => { setPhase("setup"); setBattle(null); setResult(null); setTimer(180); }}
+            className="bg-blue-600 hover:bg-blue-500 px-8 py-4 rounded-2xl font-bold text-xl">다시 하기</button>
+          <button onClick={() => navigate(`/dashboard/${studentId}`)}
+            className="bg-gray-700 hover:bg-gray-600 px-8 py-4 rounded-2xl font-bold text-xl">홈으로</button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="h-screen bg-gray-950 text-white flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-2 bg-gray-900 border-b border-gray-800 flex-shrink-0" style={{ minHeight: 60 }}>
+      <div className="flex items-center justify-between px-6 py-2 bg-gray-900 border-b border-gray-800 flex-shrink-0" style={{ minHeight: 56 }}>
         <div className="flex items-center gap-3">
-          <span className="text-gray-400 text-sm font-semibold">나</span>
+          <span className="text-gray-400 text-sm">나</span>
           <span className="text-5xl font-black text-yellow-400">{battle?.player_score ?? 0}</span>
         </div>
         <div className="flex flex-col items-center">
           <span className="text-3xl font-mono font-bold text-red-400">{fmtTime(timer)}</span>
-          <span className="text-xs text-gray-500">
-            {battle?.distance === "far" ? "원거리" : battle?.distance === "issoku" ? "일족일도" : "코등이"}
-          </span>
+          <span className="text-xs text-gray-500">{battle?.distance === "far" ? "원거리" : battle?.distance === "issoku" ? "일족일도" : "코등이"}</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-5xl font-black text-red-400">{battle?.opponent_score ?? 0}</span>
-          <span className="text-gray-400 text-sm font-semibold">{oppName}</span>
+          <span className="text-gray-400 text-sm">{oppName}</span>
         </div>
       </div>
       <div ref={wrapRef} className="flex-1 relative" style={{ minHeight: 0 }}>
-        <canvas ref={canvasRef} width={canvasSize.w} height={canvasSize.h}
-          style={{ width: "100%", height: "100%", display: "block" }} />
+        <canvas ref={canvasRef} width={canvasSize.w} height={canvasSize.h} style={{ width: "100%", height: "100%", display: "block" }} />
         {log.length > 0 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/65 rounded-lg px-5 py-1 text-sm text-yellow-200 whitespace-nowrap pointer-events-none">
             {log[0]}
           </div>
         )}
       </div>
-      <div className="bg-gray-900 border-t border-gray-800 px-4 py-3 flex gap-3 flex-shrink-0" style={{ height: 155 }}>
-        <div className="flex flex-col gap-2 w-28">
-          <button onPointerDown={() => sendAction("step_in")}
-            className="flex-1 bg-gray-700 active:bg-gray-500 rounded-xl font-bold text-sm active:scale-95 transition-transform select-none">앞으로 ▶</button>
-          <button onPointerDown={() => sendAction("step_back")}
-            className="flex-1 bg-gray-700 active:bg-gray-500 rounded-xl font-bold text-sm active:scale-95 transition-transform select-none">◀ 뒤로</button>
-          <button
-            onPointerDown={() => setHolding("seme")}
-            onPointerUp={() => setHolding(null)}
-            onPointerLeave={() => setHolding(null)}
-            className={`flex-1 rounded-xl font-bold text-sm active:scale-95 transition-transform select-none ${holding === "seme" ? "bg-orange-500" : "bg-orange-800 active:bg-orange-600"}`}
-          >세메 꾹</button>
+      <div className="bg-gray-900 border-t border-gray-800 px-3 py-2 flex gap-2 flex-shrink-0" style={{ height: 140 }}>
+        <div className="flex flex-col gap-1.5 w-24">
+          <button onPointerDown={() => sendAction("step_in")} className="flex-1 bg-gray-700 active:bg-gray-500 rounded-lg font-bold text-xs active:scale-95 transition-transform select-none">앞으로 ▶</button>
+          <button onPointerDown={() => sendAction("step_back")} className="flex-1 bg-gray-700 active:bg-gray-500 rounded-lg font-bold text-xs active:scale-95 transition-transform select-none">◀ 뒤로</button>
+          <button onPointerDown={() => setHolding("seme")} onPointerUp={() => setHolding(null)} onPointerLeave={() => setHolding(null)}
+            className={`flex-1 rounded-lg font-bold text-xs active:scale-95 transition-transform select-none ${holding === "seme" ? "bg-orange-500" : "bg-orange-800 active:bg-orange-600"}`}>세메 꾹</button>
         </div>
         <div className="flex-1 grid grid-cols-4 gap-2">
           {Object.entries(ZONE_META).map(([z, m]) => (
             <button key={z}
-              onPointerEnter={() => setActiveZone(z)}
-              onPointerLeave={() => setActiveZone(null)}
-              onPointerDown={() => strikeZone(z)}
+              onPointerEnter={() => setActiveZone(z)} onPointerLeave={() => setActiveZone(null)} onPointerDown={() => strikeZone(z)}
               className="rounded-xl font-bold flex flex-col items-center justify-center gap-0.5 active:scale-90 transition-transform select-none"
               style={{ backgroundColor: m.color + "22", border: `2px solid ${m.color}`, color: m.color }}
             >
@@ -615,15 +423,12 @@ export default function Battle() {
             </button>
           ))}
         </div>
-        <div className="flex flex-col gap-2 w-28">
-          <button
-            onPointerDown={() => { setKiai(true); sendAction("kiai"); }}
-            onPointerUp={() => setKiai(false)}
-            className="flex-1 bg-red-800 active:bg-red-600 rounded-xl font-black text-base active:scale-95 transition-transform select-none"
-          >기합！！</button>
+        <div className="flex flex-col gap-1.5 w-24">
+          <button onPointerDown={() => { setKiai(true); sendAction("kiai"); }} onPointerUp={() => setKiai(false)}
+            className="flex-1 bg-red-800 active:bg-red-600 rounded-lg font-black text-sm active:scale-95 transition-transform select-none">기합！！</button>
           {["chudan", "jodan", "gedan"].map(k => (
             <button key={k} onClick={() => { setKamae(k); sendAction("kamae"); }}
-              className={`flex-1 rounded-xl text-xs font-bold active:scale-95 transition-transform ${kamae === k ? "bg-indigo-600" : "bg-gray-700"}`}>
+              className={`flex-1 rounded-lg text-xs font-bold active:scale-95 transition-transform ${kamae === k ? "bg-indigo-600" : "bg-gray-700"}`}>
               {k === "chudan" ? "中段" : k === "jodan" ? "上段" : "下段"}
             </button>
           ))}
