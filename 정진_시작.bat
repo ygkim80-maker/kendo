@@ -3,7 +3,24 @@ chcp 65001 > nul
 title 정진 — 검도 훈련 앱
 
 echo [1/2] 백엔드 서버 시작 중...
-start "백엔드" cmd /k "cd /d %~dp0backend && py -3.13 -m uvicorn main:app --reload --port 8000"
+
+:: Python 버전 자동 감지 (3.13 → 3.12 → 3.11 → py → python 순)
+where py >nul 2>&1
+if %errorlevel%==0 (
+    py -3.13 --version >nul 2>&1
+    if %errorlevel%==0 (
+        start "백엔드" cmd /k "cd /d %~dp0backend && py -3.13 -m uvicorn main:app --reload --port 8000"
+    ) else (
+        py -3.12 --version >nul 2>&1
+        if %errorlevel%==0 (
+            start "백엔드" cmd /k "cd /d %~dp0backend && py -3.12 -m uvicorn main:app --reload --port 8000"
+        ) else (
+            start "백엔드" cmd /k "cd /d %~dp0backend && py -m uvicorn main:app --reload --port 8000"
+        )
+    )
+) else (
+    start "백엔드" cmd /k "cd /d %~dp0backend && python -m uvicorn main:app --reload --port 8000"
+)
 
 timeout /t 2 /nobreak > nul
 
