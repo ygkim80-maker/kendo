@@ -317,7 +317,8 @@ function drawHitFlash(ctx, x, y, zone, alpha) {
   const col = ZONE_META[zone]?.color || "#fff";
   const kanji = ZONE_META[zone]?.kanji || "";
 
-  const offsets = { head: [0, -145], wrist: [50, -60], waist: [0, -75], thrust: [50, -88] };
+  // head:-145(helmet), wrist:-88(arm/kote), waist:-78(do center), thrust:-89(thrust)
+  const offsets = { head: [0, -145], wrist: [50, -88], waist: [0, -78], thrust: [60, -89] };
   const [dx, dy] = offsets[zone] || [0, -100];
   const hx = x + dx, hy = y + dy;
   const t = 1 - alpha; // 0→1 as effect fades
@@ -505,10 +506,11 @@ function renderScene(canvas, state) {
   });
   ctx.restore();
 
-  // hit flash
+  // hit flash — for opponent (flip=true) mirror the x-offset
   if (state.flashAlpha > 0 && state.hitZone) {
     const fx = state.hitTarget === "player" ? playerX : oppX;
-    drawHitFlash(ctx, fx, feetY, state.hitZone, state.flashAlpha);
+    const flip = state.hitTarget === "opponent";
+    drawHitFlash(ctx, fx, feetY, state.hitZone, state.flashAlpha, flip);
   }
 
   // distance label
