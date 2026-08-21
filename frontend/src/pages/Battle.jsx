@@ -151,13 +151,13 @@ function drawChibi(ctx, opts = {}) {
       drawArm(-6, -100, 16, -138, 7);
       drawArm(8, -100, 28, -136, 7);
     } else if (strike === "wrist") {
-      // 小手: arms raised HIGH (like lifting over), shinai goes forward-DOWN onto opponent's kote
+      // 小手: arms raised HIGH, shinai goes forward-DOWN onto opponent's kote
       drawArm(-8, -102, 18, -152, 7);
       drawArm(8, -102, 30, -150, 7);
     } else if (strike === "waist") {
-      // 胴: arms sweep wide to the side, shinai diagonal-down to opponent's do
-      drawArm(-4, -96, 52, -62, 7);
-      drawArm(10, -93, 58, -56, 7);
+      // 胴: arms raised HIGH above head, shinai sweeps diagonally down to opponent's do
+      drawArm(-8, -100, 16, -148, 7);
+      drawArm(8, -100, 28, -146, 7);
     } else if (strike === "thrust") {
       // 突: both arms thrust straight forward
       drawArm(-6, -92, 50, -90, 7);
@@ -252,9 +252,9 @@ function drawChibi(ctx, opts = {}) {
       sx = 26; sy = -150; ex = 112; ey = -108;
       tX = 22; tY = -154;
     } else if (strike === "waist") {
-      // 胴: shinai sweeps wide diagonal-down to opponent's do
-      sx = 56; sy = -56; ex = 132; ey = 8;
-      tX = 52; tY = -62;
+      // 胴: shinai from HIGH above, sweeping forward-diagonal-down to opponent's do
+      sx = 24; sy = -147; ex = 128; ey = -55;
+      tX = 20; tY = -151;
     } else if (strike === "thrust") {
       // 突: shinai horizontal, straight at opponent
       sx = 50; sy = -89; ex = 140; ey = -89;
