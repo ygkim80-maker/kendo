@@ -152,11 +152,11 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2026 SBS배 초등 출전(4번 시드)</span><span class=\"yt\">2026 고학년 개인전 3위</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 SBS배 초등 출전(4번 시드)</span><span class=\"yt\">2026 고학년 개인전 3위</span><span class=\"yw\">2026 대통령기 연장승</span></div>"
         },
         {
          "class": "note",
-         "html": "초등부 에이스 · 4번 시드"
+         "html": "초등부 에이스 · 4번 시드 · 2026 대통령기 개인전 연장 접전 승리(이상유전)"
         }
        ]
       },
@@ -178,11 +178,11 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2026 고학년 개인전 우승</span><span class=\"yt\">2025 SBS배 초등 출전</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 고학년 개인전 우승</span><span class=\"yt\">2025 SBS배 초등 출전</span><span class=\"yw\">2026 대통령기 연장승</span></div>"
         },
         {
          "class": "note",
-         "html": "차환 도장 동기 · 비시드 돌풍 우승"
+         "html": "차환 도장 동기 · 비시드 돌풍 우승 · 2026 대통령기 개인전 연장 접전 승리(배수민전)"
         }
        ]
       },
@@ -263,6 +263,58 @@
          "html": "초등 4학년 · 서울 지역 신성으로 포착 [차장님 현장정보]"
         }
        ]
+      },
+      {
+       "name": "이상유",
+       "school": "배곧검도교실",
+       "cells": [
+        {
+         "class": "pn_",
+         "html": "이상유"
+        },
+        {
+         "class": "sch",
+         "html": "배곧검도교실"
+        },
+        {
+         "class": "",
+         "html": "경기"
+        },
+        {
+         "class": "",
+         "html": "<div class=\"tk\"></div>"
+        },
+        {
+         "class": "note",
+         "html": "2026 대통령기 개인전 연장까지 접전(엄정우전 패) · 신인 주목 [차장님 현장정보]"
+        }
+       ]
+      },
+      {
+       "name": "배수민",
+       "school": "문경검도관",
+       "cells": [
+        {
+         "class": "pn_",
+         "html": "배수민"
+        },
+        {
+         "class": "sch",
+         "html": "문경검도관"
+        },
+        {
+         "class": "",
+         "html": "경북"
+        },
+        {
+         "class": "",
+         "html": "<div class=\"tk\"></div>"
+        },
+        {
+         "class": "note",
+         "html": "2026 대통령기 개인전 연장까지 접전(변우석전 패) · 신인 주목 [차장님 현장정보]"
+        }
+       ]
       }
      ],
      "extra_html": ""
@@ -308,11 +360,11 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2026 SBS배 우승</span><span class=\"yw\">2026 춘계 우승</span><span class=\"yt\">2026 용인대총장기 4강</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 SBS배 우승</span><span class=\"yw\">2026 춘계 우승</span><span class=\"yt\">2026 용인대총장기 4강</span><span class=\"yr\">2026 대통령기 조별 탈락</span></div>"
         },
         {
          "class": "note",
-         "html": "전국 3연속 우승 · 국대 1순위 · 2022~2023 초등부 출전 · 제17기 남중 청소년대표 확정 ✅"
+         "html": "전국 3연속 우승 · 국대 1순위 · 2022~2023 초등부 출전 · 제17기 남중 청소년대표 확정 ✅ · 2026 대통령기 하광호전 패(이변)"
         }
        ]
       },
@@ -428,11 +480,11 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span><span class=\"yw\">2026 대통령기 준우승(연장)</span></div>"
         },
         {
          "class": "note",
-         "html": "2024 초등부 출전 · 서석중 3번"
+         "html": "2024 초등부 출전 · 서석중 3번 · 2026 대통령기 준우승(하광호전 연장 패)"
         }
        ]
       },
@@ -548,11 +600,11 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2026 용인대총장기 준우승</span><span class=\"yt\">2025 SBS배 중학 출전</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 용인대총장기 준우승</span><span class=\"yt\">2025 SBS배 중학 출전</span><span class=\"yw\">2026 대통령기 4강</span></div>"
         },
         {
          "class": "note",
-         "html": "2024 초등부 출전→2025 중학 1년차→2026 중학 2년차 = 중3"
+         "html": "2024 초등부 출전→2025 중학 1년차→2026 중학 2년차 = 중3 · 2026 대통령기 4강(하광호전 패)"
         }
        ]
       },
@@ -742,7 +794,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "하광호"
+         "html": "하광호 <span class=\"tag tw_\">대통령기 우승</span>"
         },
         {
          "class": "sch",
@@ -758,11 +810,11 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yt\">2025 SBS배 중학 출전</span><span class=\"yt\">2026 SBS배 출전</span><span class=\"yw\">2025 춘계 8강</span><span class=\"yw\">2025 회장기 2학년단체 준우승</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yt\">2025 SBS배 중학 출전</span><span class=\"yt\">2026 SBS배 출전</span><span class=\"yw\">2025 춘계 8강</span><span class=\"yw\">2025 회장기 2학년단체 준우승</span><span class=\"yw\">2026 대통령기 우승</span></div>"
         },
         {
          "class": "note",
-         "html": "2024 초등부 출전 · 왕운중 2번 · 2025 춘계 8강·회장기 준우승"
+         "html": "2024 초등부 출전 · 왕운중 2번 · 2025 춘계 8강·회장기 준우승 · 2026 대통령기 우승(문율·허경도 꺾고 정상)"
         }
        ]
       },
@@ -12112,6 +12164,28 @@
     "elem",
     0,
     5
+   ]
+  },
+  {
+   "name": "이상유",
+   "school": "배곧검도교실",
+   "panel": "elem",
+   "section": "현재 초등 재학 / 예비 중1",
+   "ref": [
+    "elem",
+    0,
+    6
+   ]
+  },
+  {
+   "name": "배수민",
+   "school": "문경검도관",
+   "panel": "elem",
+   "section": "현재 초등 재학 / 예비 중1",
+   "ref": [
+    "elem",
+    0,
+    7
    ]
   },
   {
