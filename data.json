@@ -2684,7 +2684,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span><span class=\"yt\">2026 용인대총장기 출전</span><span class=\"yw\">2026.07 회장기 남고부 통합개인 우승</span><span class=\"yw\">2026 대통령기 개인전 연장승(신상률전)</span><span class=\"yw\">2026 대통령기 개인전 승(문지훈전)</span><span class=\"yw\">2026 대통령기 개인전 4강 진출</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span><span class=\"yt\">2026 용인대총장기 출전</span><span class=\"yw\">2026.07 회장기 남고부 통합개인 우승</span><span class=\"yw\">2026 대통령기 개인전 연장승(신상률전)</span><span class=\"yw\">2026 대통령기 개인전 승(문지훈전)</span><span class=\"yr\">2026 대통령기 개인전 4강 패(이건민전)</span></div>"
         },
         {
          "class": "note",
@@ -2715,6 +2715,32 @@
         {
          "class": "note",
          "html": "학년 미확인(고1·고2 중 추정) · 상단세로 싸우는데 기량 좋음 [차장님 현장정보]"
+        }
+       ]
+      },
+      {
+       "name": "이건민",
+       "school": "문화고",
+       "cells": [
+        {
+         "class": "pn_",
+         "html": "이건민 <span class=\"tag tw_\">4강</span>"
+        },
+        {
+         "class": "sch",
+         "html": "문화고"
+        },
+        {
+         "class": "",
+         "html": "-"
+        },
+        {
+         "class": "",
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 대통령기 개인전 연장승(이승효전)</span><span class=\"yw\">2026 대통령기 개인전 승(김주완전)</span><span class=\"yw\">2026 대통령기 개인전 4강 승(정회겸전, 정규시간 내 승)</span><span class=\"yt\">2026 대통령기 개인전 결승 진출(vs 김태인)</span></div>"
+        },
+        {
+         "class": "note",
+         "html": "학년 미확인 · 동명이인 주의(기존 등록된 이건민은 온양용화고 소속, 별도 인물) [차장님 현장정보]"
         }
        ]
       }
@@ -13136,6 +13162,17 @@
     "hi",
     1,
     14
+   ]
+  },
+  {
+   "name": "이건민",
+   "school": "문화고",
+   "panel": "hi",
+   "section": "고등학교 2학년",
+   "ref": [
+    "hi",
+    1,
+    15
    ]
   },
   {
