@@ -720,7 +720,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2026 부원중 단체 우승</span><span class=\"yt\">2026 SBS배 출전</span><span class=\"yr\">2026 대통령기 단체전 결승 부장 패(이준혁전)</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 부원중 단체 우승</span><span class=\"yt\">2026 SBS배 출전</span><span class=\"yw\">2026 대통령기 단체전 결승 부장 승(이준혁전, 2:0) — 다득점 우위로 부원중 우승 견인</span></div>"
         },
         {
          "class": "note",
@@ -750,7 +750,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span><span class=\"yr\">2026 대통령기 단체전 결승 주장 연장패(김동우전)</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span><span class=\"yr\">2026 대통령기 단체전 결승 주장 연장패(김동우전, 0:1)</span></div>"
         },
         {
          "class": "note",
@@ -990,11 +990,11 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span><span class=\"yw\">2026 대통령기 단체전 결승 주장 연장승 — 문화중 우승</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span><span class=\"yw\">2026 대통령기 단체전 결승 주장 연장승(이재준전, 1:0)</span></div>"
         },
         {
          "class": "note",
-         "html": "문화중 · 학년 미확인"
+         "html": "문화중 · 학년 미확인 · 팀은 경기 1:1(다득점 1:2)로 준우승"
         }
        ]
       }
@@ -1110,7 +1110,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2025 남중부 중1 3위 ✅</span><span class=\"yw\">2025 SBS배 초등 1번 시드</span><span class=\"yt\">2026 대통령기 단체전 결승 선봉 출전(부전)</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2025 남중부 중1 3위 ✅</span><span class=\"yw\">2025 SBS배 초등 1번 시드</span><span class=\"yt\">2026 대통령기 단체전 결승 선봉 무승부(조하원전)</span></div>"
         },
         {
          "class": "note",
@@ -1136,7 +1136,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2025 남중부 중1 우승 ✅</span><span class=\"yt\">2026 대통령기 단체전 결승 2위 출전(부전)</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2025 남중부 중1 우승 ✅</span><span class=\"yt\">2026 대통령기 단체전 결승 2위 무승부(차승호전)</span></div>"
         },
         {
          "class": "note",
