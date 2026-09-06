@@ -2684,11 +2684,37 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span><span class=\"yt\">2026 용인대총장기 출전</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 출전</span><span class=\"yt\">2026 용인대총장기 출전</span><span class=\"yw\">2026.07 회장기 남고부 통합개인 우승</span><span class=\"yw\">2026 대통령기 개인전 연장승(신상률전)</span><span class=\"yw\">2026 대통령기 개인전 승(문지훈전)</span></div>"
         },
         {
          "class": "note",
-         "html": "익산중→익산고 · 배용한 선배"
+         "html": "익산중→익산고 · 배용한 선배 · 상위권 실력자"
+        }
+       ]
+      },
+      {
+       "name": "이승효",
+       "school": "발곡고",
+       "cells": [
+        {
+         "class": "pn_",
+         "html": "이승효"
+        },
+        {
+         "class": "sch",
+         "html": "발곡고"
+        },
+        {
+         "class": "",
+         "html": "-"
+        },
+        {
+         "class": "",
+         "html": "<div class=\"tk\"><span class=\"yr\">2026 대통령기 개인전 연장패(이건민전)</span><span class=\"yw\">2026 대통령기 단체전 부장 승(오승준전)</span></div>"
+        },
+        {
+         "class": "note",
+         "html": "학년 미확인(고1·고2 중 추정) · 상단세로 싸우는데 기량 좋음 [차장님 현장정보]"
         }
        ]
       }
@@ -13099,6 +13125,17 @@
     "hi",
     1,
     13
+   ]
+  },
+  {
+   "name": "이승효",
+   "school": "발곡고",
+   "panel": "hi",
+   "section": "고등학교 2학년",
+   "ref": [
+    "hi",
+    1,
+    14
    ]
   },
   {
