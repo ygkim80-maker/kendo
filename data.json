@@ -1778,7 +1778,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "이용주"
+         "html": "이용주 <span class=\"tag tg_\">대통령기 단체전 준우승</span>"
         },
         {
          "class": "sch",
@@ -1794,7 +1794,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 1번 시드</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yt\">2026 SBS배 1번 시드</span><span class=\"yr\">2026 대통령기 단체전 결승 준우승(대구공업고 상대)</span></div>"
         },
         {
          "class": "note",
@@ -2048,7 +2048,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "김태인 <span class=\"tag tg_\">상비군</span>"
+         "html": "김태인 <span class=\"tag tw_\">대통령기 우승</span> <span class=\"tag tg_\">상비군</span>"
         },
         {
          "class": "sch",
@@ -2064,7 +2064,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2026 청소년대표 상비군 ✅</span><span class=\"yw\">2026 대통령기 개인전 4강 승(채현원전) · 결승 진출</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 청소년대표 상비군 ✅</span><span class=\"yw\">2026 대통령기 개인전 4강 승(채현원전)</span><span class=\"yw\">2026 대통령기 개인전 결승 승(이건민전) — 우승 🏆</span></div>"
         },
         {
          "class": "note",
@@ -2288,7 +2288,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "김민성"
+         "html": "김민성 <span class=\"tag tg_\">대통령기 단체전 준우승</span>"
         },
         {
          "class": "sch",
@@ -2304,7 +2304,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yt\">2026 회장기 남고부 3학년부 3위</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yt\">2026 회장기 남고부 3학년부 3위</span><span class=\"yr\">2026 대통령기 단체전 결승 준우승(대구공업고 상대)</span></div>"
         },
         {
          "class": "note",
@@ -2412,7 +2412,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "이강명 <span class=\"tag tg_\">상비군</span>"
+         "html": "이강명 <span class=\"tag tw_\">대통령기 단체전 우승</span> <span class=\"tag tg_\">상비군</span>"
         },
         {
          "class": "sch",
@@ -2424,7 +2424,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2025 청소년대표 상비군 ✅</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2025 청소년대표 상비군 ✅</span><span class=\"yw\">2026 대통령기 단체전 결승 우승(형곡고 상대)</span></div>"
         },
         {
          "class": "note",
@@ -2724,7 +2724,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "이건민 <span class=\"tag tw_\">4강</span>"
+         "html": "이건민 <span class=\"tag tw_\">준우승</span>"
         },
         {
          "class": "sch",
@@ -2736,7 +2736,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2026 대통령기 개인전 연장승(이승효전)</span><span class=\"yw\">2026 대통령기 개인전 승(김주완전)</span><span class=\"yw\">2026 대통령기 개인전 4강 승(정회겸전, 정규시간 내 승)</span><span class=\"yt\">2026 대통령기 개인전 결승 진출(vs 김태인)</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 대통령기 개인전 연장승(이승효전)</span><span class=\"yw\">2026 대통령기 개인전 승(김주완전)</span><span class=\"yw\">2026 대통령기 개인전 4강 승(정회겸전, 정규시간 내 승)</span><span class=\"yr\">2026 대통령기 개인전 결승 패(김태인전) · 준우승</span></div>"
         },
         {
          "class": "note",
@@ -6020,7 +6020,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "하유종"
+         "html": "하유종 <span class=\"tag tg_\">대통령기 단체전 준우승</span>"
         },
         {
          "class": "sch",
@@ -6028,7 +6028,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"></div>"
+         "html": "<div class=\"tk\"><span class=\"yr\">2026 대통령기 단체전 결승 준우승(대구대 상대)</span></div>"
         },
         {
          "class": "note",
@@ -6064,7 +6064,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "박지훈"
+         "html": "박지훈 <span class=\"tag tg_\">대통령기 단체전 준우승</span>"
         },
         {
          "class": "sch",
@@ -6072,7 +6072,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"></div>"
+         "html": "<div class=\"tk\"><span class=\"yr\">2026 대통령기 단체전 결승 준우승(대구대 상대)</span></div>"
         },
         {
          "class": "note",
@@ -6284,7 +6284,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "임효원 <span class=\"tag tg_\">상비군이력</span>"
+         "html": "임효원 <span class=\"tag tw_\">대통령기 단체전 우승</span> <span class=\"tag tg_\">상비군이력</span>"
         },
         {
          "class": "sch",
@@ -6292,7 +6292,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yt\">2022 추계·2023 회장기·2025 대통령기 출전</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yt\">2022 추계·2023 회장기·2025 대통령기 출전</span><span class=\"yw\">2026 대통령기 단체전 결승 우승(경북대 상대)</span></div>"
         },
         {
          "class": "note",
@@ -6372,7 +6372,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "원유제"
+         "html": "원유제 <span class=\"tag tw_\">대통령기 단체전 우승</span>"
         },
         {
          "class": "sch",
@@ -6380,7 +6380,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 대통령기 단체전 결승 우승(경북대 상대)</span></div>"
         },
         {
          "class": "note",
@@ -6563,7 +6563,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "양진회 <span class=\"tag tw_\">대회 우승</span> <span class=\"tag tg_\">상비군이력</span>"
+         "html": "양진회 <span class=\"tag tw_\">대통령기 우승</span> <span class=\"tag tg_\">상비군이력</span>"
         },
         {
          "class": "sch",
@@ -6571,7 +6571,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2026 대학회장기 우승</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 대학회장기 우승</span><span class=\"yw\">2026 대통령기 개인전 준결승 연장승(오병준전)</span><span class=\"yw\">2026 대통령기 개인전 결승 연장승(변종현전) — 우승 🏆</span></div>"
         },
         {
          "class": "note",
@@ -6739,7 +6739,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "이수창"
+         "html": "이수창 <span class=\"tag tg_\">대통령기 단체전 준우승</span>"
         },
         {
          "class": "sch",
@@ -6747,7 +6747,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"></div>"
+         "html": "<div class=\"tk\"><span class=\"yr\">2026 대통령기 단체전 결승 대표전 패(배성진전, 1점차) · 준우승</span></div>"
         },
         {
          "class": "note",
@@ -6761,7 +6761,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "문태훈"
+         "html": "문태훈 <span class=\"tag tg_\">대통령기 단체전 준우승</span>"
         },
         {
          "class": "sch",
@@ -6769,7 +6769,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"></div>"
+         "html": "<div class=\"tk\"><span class=\"yr\">2026 대통령기 단체전 결승 준우승(대구대 상대)</span></div>"
         },
         {
          "class": "note",
@@ -6783,7 +6783,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "정해윤"
+         "html": "정해윤 <span class=\"tag tg_\">대통령기 단체전 준우승</span>"
         },
         {
          "class": "sch",
@@ -6791,7 +6791,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"></div>"
+         "html": "<div class=\"tk\"><span class=\"yr\">2026 대통령기 단체전 결승 준우승(대구대 상대)</span></div>"
         },
         {
          "class": "note",
@@ -6981,7 +6981,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "박장수"
+         "html": "박장수 <span class=\"tag tw_\">대통령기 단체전 우승</span>"
         },
         {
          "class": "sch",
@@ -6989,7 +6989,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 대통령기 단체전 결승 우승(경북대 상대)</span></div>"
         },
         {
          "class": "note",
@@ -7245,7 +7245,7 @@
        "cells": [
         {
          "class": "pn_",
-         "html": "변종현 <span class=\"tag tg_\">주장</span> <span class=\"tag tg_\">상비군이력</span>"
+         "html": "변종현 <span class=\"tag tw_\">준우승</span> <span class=\"tag tg_\">주장</span> <span class=\"tag tg_\">상비군이력</span>"
         },
         {
          "class": "sch",
@@ -7253,7 +7253,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 대통령기 개인전 준결승 연장승(박성우전)</span><span class=\"yr\">2026 대통령기 개인전 결승 연장패(양진회전) · 준우승</span></div>"
         },
         {
          "class": "note",
@@ -7390,6 +7390,28 @@
         {
          "class": "note",
          "html": "제주대 · 임동균 동기"
+        }
+       ]
+      },
+      {
+       "name": "배성진",
+       "school": "대구대",
+       "cells": [
+        {
+         "class": "pn_",
+         "html": "배성진 <span class=\"tag tw_\">대통령기 단체전 우승</span>"
+        },
+        {
+         "class": "sch",
+         "html": "대구대"
+        },
+        {
+         "class": "",
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 대통령기 단체전 결승 대표전 승(이수창전, 1점차) — 대구대 우승 확정</span></div>"
+        },
+        {
+         "class": "note",
+         "html": "대구대 주장 · 동명이인 주의(기존 등록된 배성진은 영산대 소속, 별도 인물)"
         }
        ]
       }
@@ -15076,6 +15098,17 @@
     "univ",
     3,
     1
+   ]
+  },
+  {
+   "name": "배성진",
+   "school": "대구대",
+   "panel": "univ",
+   "section": "대학교 4학년",
+   "ref": [
+    "univ",
+    3,
+    38
    ]
   },
   {
