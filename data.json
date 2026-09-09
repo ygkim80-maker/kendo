@@ -4509,6 +4509,28 @@
          "html": "명신고 졸업 · 2025 회장기 8강 · 대학 소속 미확인"
         }
        ]
+      },
+      {
+       "name": "김도원",
+       "school": "대구대",
+       "cells": [
+        {
+         "class": "pn_",
+         "html": "김도원 <span class=\"tag tg_\">신동</span>"
+        },
+        {
+         "class": "sch",
+         "html": "대구대"
+        },
+        {
+         "class": "",
+         "html": "<div class=\"tk\"></div>"
+        },
+        {
+         "class": "note",
+         "html": "원통중→원통고 에이스·주장 · 어릴 때 TV 출연한 검도 신동 [차장님 현장정보] · 대구대 1학년"
+        }
+       ]
       }
      ],
      "extra_html": ""
@@ -14031,6 +14053,17 @@
     "univ",
     0,
     51
+   ]
+  },
+  {
+   "name": "김도원",
+   "school": "대구대",
+   "panel": "univ",
+   "section": "대학교 1학년",
+   "ref": [
+    "univ",
+    0,
+    52
    ]
   },
   {
