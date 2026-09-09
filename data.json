@@ -6725,7 +6725,7 @@
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yr\">2026 대통령기 단체전 결승 준우승(대구대 상대) · 대표전 출전</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yr\">2026 대통령기 단체전 결승 대표전 패(배성진전, 1점차) · 준우승</span></div>"
         },
         {
          "class": "note",
@@ -7368,6 +7368,28 @@
         {
          "class": "note",
          "html": "제주대 · 임동균 동기"
+        }
+       ]
+      },
+      {
+       "name": "배성진",
+       "school": "대구대",
+       "cells": [
+        {
+         "class": "pn_",
+         "html": "배성진 <span class=\"tag tw_\">대통령기 단체전 우승</span>"
+        },
+        {
+         "class": "sch",
+         "html": "대구대"
+        },
+        {
+         "class": "",
+         "html": "<div class=\"tk\"><span class=\"yw\">2026 대통령기 단체전 결승 대표전 승(이수창전, 1점차) — 대구대 우승 확정</span></div>"
+        },
+        {
+         "class": "note",
+         "html": "대구대 주장 · 동명이인 주의(기존 등록된 배성진은 영산대 소속, 별도 인물)"
         }
        ]
       }
@@ -15043,6 +15065,17 @@
     "univ",
     3,
     1
+   ]
+  },
+  {
+   "name": "배성진",
+   "school": "대구대",
+   "panel": "univ",
+   "section": "대학교 4학년",
+   "ref": [
+    "univ",
+    3,
+    38
    ]
   },
   {
