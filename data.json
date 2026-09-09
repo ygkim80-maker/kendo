@@ -213,32 +213,6 @@
        ]
       },
       {
-       "name": "김희승",
-       "school": "수석검도관",
-       "cells": [
-        {
-         "class": "pn_",
-         "html": "김희승 <span class=\"tag tg_\">에이스</span>"
-        },
-        {
-         "class": "sch",
-         "html": "수석검도관"
-        },
-        {
-         "class": "",
-         "html": "인천"
-        },
-        {
-         "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2024 SBS배 초등 1번 시드</span><span class=\"yt\">2025 SBS배 초등 출전(13번)</span></div>"
-        },
-        {
-         "class": "note",
-         "html": "초등부 에이스 · 2024·2025 연속 출전 · 현재 중1~중2"
-        }
-       ]
-      },
-      {
        "name": "유승민",
        "school": "목동검도관",
        "cells": [
@@ -1265,23 +1239,23 @@
      "rows": [
       {
        "name": "김희승",
-       "school": "수석검도관→중학",
+       "school": "부원중",
        "cells": [
         {
          "class": "pn_",
-         "html": "김희승"
+         "html": "김희승 <span class=\"tag tg_\">에이스</span>"
         },
         {
          "class": "sch",
-         "html": "수석검도관→중학"
+         "html": "부원중"
         },
         {
          "class": "",
-         "html": "<div class=\"tk\"><span class=\"yw\">2024 SBS배 초등 1번 시드</span><span class=\"yt\">2025 SBS배 초등 출전</span></div>"
+         "html": "<div class=\"tk\"><span class=\"yw\">2024 SBS배 초등 1번 시드</span><span class=\"yt\">2025 SBS배 초등 출전(13번)</span></div>"
         },
         {
          "class": "note",
-         "html": "인천 · 중1~중2 추정 · 초등부 에이스"
+         "html": "인천 부원중 · 초등부 에이스 출신"
         }
        ]
       }
@@ -12219,17 +12193,6 @@
    ]
   },
   {
-   "name": "김희승",
-   "school": "수석검도관",
-   "panel": "elem",
-   "section": "현재 초등 재학 / 예비 중1",
-   "ref": [
-    "elem",
-    0,
-    4
-   ]
-  },
-  {
    "name": "유승민",
    "school": "목동검도관",
    "panel": "elem",
@@ -12237,7 +12200,7 @@
    "ref": [
     "elem",
     0,
-    5
+    4
    ]
   },
   {
@@ -12248,7 +12211,7 @@
    "ref": [
     "elem",
     0,
-    6
+    5
    ]
   },
   {
@@ -12259,7 +12222,7 @@
    "ref": [
     "elem",
     0,
-    7
+    6
    ]
   },
   {
@@ -12605,7 +12568,7 @@
   },
   {
    "name": "김희승",
-   "school": "수석검도관→중학",
+   "school": "부원중",
    "panel": "mid",
    "section": "중학교 1학년",
    "ref": [
